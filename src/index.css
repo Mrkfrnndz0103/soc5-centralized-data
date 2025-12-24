@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm color palette */
+    --background: 30 25% 96%;
+    --foreground: 20 14% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 20%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 30 20% 92%;
+    --secondary-foreground: 20 14% 20%;
+    --muted: 30 15% 94%;
+    --muted-foreground: 20 10% 45%;
+    --accent: 35 85% 88%;
+    --accent-foreground: 20 14% 20%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 15% 88%;
+    --input: 0 0% 100%;
+    --ring: 25 95% 53%;
+    --radius: 0.75rem;
+
+    --sidebar-bg: 20 14% 12%;
+    --sidebar-foreground: 30 15% 85%;
+    --sidebar-active: 45 100% 51%;
+    --sidebar-active-foreground: 20 14% 12%;
+    --sidebar-submenu-active: 255 255 255 / 0.1;
+  }
+
+  [data-theme='dark'] {
+    --background: 20 14% 12%;
+    --foreground: 30 15% 95%;
+    --card: 20 14% 16%;
+    --card-foreground: 30 15% 95%;
+    --popover: 20 14% 16%;
+    --popover-foreground: 30 15% 95%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 20 14% 20%;
+    --secondary-foreground: 30 15% 95%;
+    --muted: 20 14% 20%;
+    --muted-foreground: 30 10% 65%;
+    --accent: 20 14% 20%;
+    --accent-foreground: 30 15% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 20 14% 20%;
+    --input: 20 14% 20%;
+    --ring: 25 95% 53%;
+
+    --sidebar-bg: 20 14% 8%;
+    --sidebar-foreground: 30 15% 75%;
+    --sidebar-active: 45 100% 51%;
+    --sidebar-active-foreground: 20 14% 12%;
+    --sidebar-submenu-active: 255 255 255 / 0.1;
+  }
+}
+
+@layer base {
+  #root {
+    @apply p-0;
+  }
+  
+  .app-container {
+    @apply overflow-hidden;
+    height: 100vh;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  .animate-slide-in {
+    animation: slideIn 0.2s ease-out forwards;
+  }
+
+  @keyframes slideIn {
+    from {
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      max-height: 500px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  }
+
+  .card-shadow-lg {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  }
+
+  .truck-button {
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx, 0deg)) translateZ(0);
+    transition: transform .5s, border-radius .3s linear var(--br-d, 0s);
+  }
+
+  .truck-button::before,
+  .truck-button::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 6px;
+    display: block;
+    background: var(--b, var(--street));
+    transform-origin: 0 100%;
+    transform: rotateX(90deg) scaleX(var(--sy, 1));
+  }
+
+  .truck-button::after {
+    --sy: var(--progress, 0);
+    --b: var(--street-fill);
+  }
+
+  .truck-button.animation {
+    --rx: -90deg;
+    --br: 0;
+  }
+
+  .truck-button.animation.done {
+    --rx: 0deg;
+    --br: 9999px;
+    --br-d: .2s;
+  }
+}

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SOC Internal Tool - Dispatch Report</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- FontAwesome for Icons -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            'soc-sidebar': '#f0f2f5',
+            'soc-sidebar-hover': '#eef2f6',
+            'soc-active-menu': '#dce4ea', // Light gray/blue for active state
+            'soc-primary': '#357a87', // Updated deep teal
+            'soc-primary-hover': '#2a616b',
+            'soc-text-main': '#1f2937',
+            'soc-text-muted': '#6b7280',
+            'soc-orange': '#f36e32', // For the logo
+            'soc-border': '#e5e7eb',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom CSS for specific component tweaks -->
+<style data-purpose="custom-overrides">
+    body {
+      background-color: #ffffff;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    /* Scrollbar styling for main content if needed */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 20px;
+    }
+
+    /* Input focus overrides */
+    .form-input:focus {
+      --tw-ring-color: #357a87;
+      border-color: #357a87;
+    }
+
+    /* Adjusting specific table cell widths to match mockup */
+    .col-w-xs { width: 50px; } /* New narrow width for index */
+    .col-w-sm { min-width: 120px; } /* Increased for Region, Counts, Dock # */
+    .col-w-md { min-width: 200px; } /* Increased for Cluster, Station */
+    .col-w-lg { min-width: 260px; } /* Increased significantly for Dates */
+  </style>
+</head>
+<body class="flex text-soc-text-main antialiased">
+<!-- BEGIN: Sidebar -->
+<aside class="w-64 bg-soc-sidebar h-full flex flex-col border-r border-gray-200 shrink-0" data-purpose="sidebar">
+<!-- Logo Section -->
+<div class="h-16 flex items-center px-6 pt-4 pb-2">
+<div class="flex items-center gap-3">
+<!-- Logo Placeholder -->
+<div class="w-10 h-10 bg-white rounded flex items-center justify-center shadow-sm">
+<i class="fa-solid fa-shapes text-soc-orange text-2xl"></i>
+</div>
+<div class="leading-tight">
+<div class="text-lg text-gray-800 font-extrabold">SOC Internal</div>
+<div class="text-xs text-gray-500 font-semibold tracking-wider">TOOL</div>
+</div>
+</div>
+</div>
+<!-- Main Navigation -->
+<nav class="flex-1 overflow-y-auto px-3 py-6 space-y-1 custom-scrollbar">
+<!-- Dashboard -->
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-gray-900 rounded-md hover:bg-white transition-colors" href="#">
+<div class="w-5 text-center"><i class="fa-solid fa-border-all"></i></div>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<!-- Outbound (Expanded) -->
+<div class="mt-2">
+<a class="flex items-center justify-between px-3 py-2 text-gray-900 bg-[#dbe4ef] rounded-md transition-colors border-l-4 border-[#2c3e50]" href="#">
+<div class="flex items-center gap-3">
+<div class="w-5 text-center"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+<span class="text-sm font-medium">Outbound</span>
+</div>
+<i class="fa-solid fa-chevron-up text-xs text-gray-500"></i>
+</a>
+<!-- Submenu -->
+<div class="ml-8 mt-1 space-y-1 border-l border-gray-300 pl-2">
+<a class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900 rounded-md hover:bg-gray-100" href="#">
+            Dispatch Monitoring
+          </a>
+<!-- Active Submenu Item -->
+<a class="block px-3 py-2 text-sm font-medium text-gray-900 bg-[#ced4da] rounded-md" href="#">
+            Dispatch Report
+          </a>
+<a class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900 rounded-md hover:bg-gray-100" href="#">
+            Prealert
+          </a>
+<a class="block px-3 py-2 text-sm text-gray-600 hover:text-gray-900 rounded-md hover:bg-gray-100" href="#">
+            Per Bay Allocation
+          </a>
+</div>
+</div>
+<!-- Admin (Collapsed) -->
+<a class="flex items-center justify-between px-3 py-2 text-gray-600 hover:text-gray-900 rounded-md hover:bg-white transition-colors mt-2" href="#">
+<div class="flex items-center gap-3">
+<div class="w-5 text-center"><i class="fa-solid fa-gear"></i></div>
+<span class="text-sm font-medium">Admin</span>
+</div>
+<i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+</a>
+<!-- KPI & Compliance (Collapsed) -->
+<a class="flex items-center justify-between px-3 py-2 text-gray-600 hover:text-gray-900 rounded-md hover:bg-white transition-colors" href="#">
+<div class="flex items-center gap-3">
+<div class="w-5 text-center"><i class="fa-solid fa-chart-column"></i></div>
+<span class="text-sm font-medium">KPI &amp; Compliance</span>
+</div>
+<i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+</a>
+<!-- Midmile (Collapsed) -->
+<a class="flex items-center justify-between px-3 py-2 text-gray-600 hover:text-gray-900 rounded-md hover:bg-white transition-colors" href="#">
+<div class="flex items-center gap-3">
+<div class="w-5 text-center"><i class="fa-solid fa-route"></i></div>
+<span class="text-sm font-medium">Midmile</span>
+</div>
+<i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+</a>
+</nav>
+<!-- Bottom Sidebar Links -->
+<div class="p-3 border-t border-gray-200 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-gray-900 rounded-md hover:bg-white transition-colors" href="#">
+<div class="w-5 text-center"><i class="fa-regular fa-bell"></i></div>
+<span class="text-sm font-medium">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-gray-900 rounded-md hover:bg-white transition-colors" href="#">
+<div class="w-5 text-center"><i class="fa-regular fa-circle-question"></i></div>
+<span class="text-sm font-medium">Help</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-gray-900 rounded-md hover:bg-white transition-colors" href="#">
+<div class="w-5 text-center"><i class="fa-solid fa-sliders"></i></div>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</div>
+</aside>
+<!-- END: Sidebar -->
+<!-- BEGIN: Main Content Wrapper -->
+<div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+<!-- BEGIN: Header -->
+<header class="h-16 border-b border-gray-200 flex items-center justify-between px-6 bg-white shrink-0" data-purpose="top-header">
+<!-- Header Title -->
+<h1 class="text-2xl font-bold text-gray-800">Dispatch Report</h1>
+<!-- Header Tools & Profile -->
+<div class="flex items-center gap-6">
+<!-- Icons -->
+<div class="flex items-center gap-4 text-gray-500">
+<button class="hover:text-gray-700"><i class="fa-solid fa-magnifying-glass text-lg"></i></button>
+<button class="hover:text-gray-700 relative">
+<i class="fa-regular fa-bell text-lg"></i>
+<span class="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white bg-red-500 transform translate-x-1/2 -translate-y-1/4"></span>
+</button>
+<button class="hover:text-gray-700"><i class="fa-solid fa-gear text-lg"></i></button>
+<button class="hover:text-gray-700"><i class="fa-regular fa-sun text-lg"></i></button>
+</div>
+<div class="h-6 w-px bg-gray-300 mx-1"></div>
+<!-- Date & Time -->
+<div class="text-right">
+<div class="text-lg font-bold text-gray-800 leading-none">21:25:47</div>
+<div class="text-xs text-gray-500">Wed, Dec 24, 2025</div>
+</div>
+<!-- User Profile -->
+<div class="flex items-center gap-3 cursor-pointer">
+<div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 border border-gray-300">
+<i class="fa-solid fa-user"></i>
+</div>
+<div class="hidden md:block">
+<div class="text-sm font-semibold text-gray-800">Juan Dela Cruz</div>
+</div>
+<i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+</div>
+</div>
+</header>
+<!-- END: Header -->
+<!-- BEGIN: Content Body -->
+<main class="flex-1 overflow-x-auto overflow-y-auto p-6 bg-white custom-scrollbar" data-purpose="main-dashboard-area">
+<!-- Section Header -->
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-xl font-bold text-gray-900">Dispatch Entries</h2>
+<p class="text-sm text-gray-500 mt-1">Add up to 10 dispatch entries per session</p>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 border border-soc-primary text-soc-primary rounded font-medium hover:bg-gray-50 transition-colors">
+<i class="fa-regular fa-floppy-disk"></i>
+          Save Draft
+        </button>
+</div>
+<!-- BEGIN: Data Entry Table -->
+<div class="border border-gray-200 rounded-lg overflow-hidden mb-6 shadow-sm">
+<div class="overflow-x-auto">
+<table class="min-w-full divide-y divide-gray-200">
+<thead class="bg-gray-50">
+<tr>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-xs" scope="col">#</th>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-md" scope="col">Cluster</th>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-md" scope="col">Station</th>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-sm" scope="col">Region</th>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-sm" scope="col">To Count</th>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-sm" scope="col">OID Loaded</th>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-lg" scope="col">Docked Time</th>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-sm" scope="col">Dock #</th>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-lg" scope="col">Depart Time</th>
+<th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider col-w-md" scope="col">Process</th>
+</tr>
+</thead>
+<tbody class="bg-white divide-y divide-gray-200">
+<!-- Row 1 (Active/Filled) -->
+<tr>
+<td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">1</td>
+<!-- Cluster Input -->
+<td class="px-3 py-2 whitespace-nowrap">
+<input class="form-input block w-full border-gray-300 text-sm shadow-sm focus:border-soc-primary focus:ring focus:ring-soc-primary/20 py-1.5 placeholder:text-gray-400 rounded" placeholder="Type to search..." type="text"/>
+</td>
+<!-- Station (Pill/Button look) -->
+<td class="px-3 py-2 whitespace-nowrap">
+<div class="border border-gray-300 rounded px-3 py-1.5 text-sm font-semibold text-gray-700 bg-white inline-block w-full text-center">
+                     STATION A
+                   </div>
+</td>
+<!-- Region (Searchable) -->
+<td class="px-3 py-2 whitespace-nowrap">
+<div class="relative shadow-sm rounded">
+<input class="form-input block w-full border-gray-300 text-sm focus:border-soc-primary focus:ring focus:ring-soc-primary/20 py-1.5 pr-8 rounded" type="text" value="NCR"/>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+<i class="fa-solid fa-magnifying-glass text-gray-400 text-xs"></i>
+</div>
+</div>
+</td>
+<!-- To Count -->
+<td class="px-3 py-2 whitespace-nowrap">
+<input class="form-input block w-full border-gray-300 text-sm shadow-sm focus:border-soc-primary focus:ring focus:ring-soc-primary/20 py-1.5 rounded" type="text" value="150"/>
+</td>
+<!-- OID Loaded -->
+<td class="px-3 py-2 whitespace-nowrap">
+<input class="form-input block w-full border-gray-300 text-sm shadow-sm focus:border-soc-primary focus:ring focus:ring-soc-primary/20 py-1.5 rounded" type="text" value="120"/>
+</td>
+<!-- Docked Time -->
+<td class="px-3 py-2 whitespace-nowrap">
+<div class="relative shadow-sm rounded">
+<input class="form-input block w-full border-gray-300 text-sm shadow-sm focus:border-soc-primary focus:ring focus:ring-soc-primary/20 py-1.5 placeholder:text-gray-400 rounded" placeholder="mm/dd/yyyy --:--" type="text"/>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+<i class="fa-regular fa-calendar text-gray-400"></i>
+</div>
+</div>
+</td>
+<!-- Dock # -->
+<td class="px-3 py-2 whitespace-nowrap">
+<input class="form-input block w-full border-gray-300 text-sm shadow-sm focus:border-soc-primary focus:ring focus:ring-soc-primary/20 py-1.5 rounded" type="text" value="Dock 1"/>
+</td>
+<!-- Depart Time -->
+<td class="px-3 py-2 whitespace-nowrap">
+<div class="relative shadow-sm rounded">
+<input class="form-input block w-full border-gray-300 text-sm shadow-sm focus:border-soc-primary focus:ring focus:ring-soc-primary/20 py-1.5 placeholder:text-gray-400 rounded" placeholder="mm/dd/yyyy --:--" type="text"/>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+<i class="fa-regular fa-calendar text-gray-400"></i>
+</div>
+</div>
+</td>
+<!-- Process -->
+<td class="px-3 py-2 whitespace-nowrap">
+<div class="border border-soc-primary/50 text-soc-primary rounded px-3 py-1.5 text-sm font-medium bg-white inline-block w-full text-center">
+                    Loading
+                  </div>
+</td>
+</tr>
+<!-- Placeholder for extra rows (visual spacing) -->
+</tbody>
+</table>
+</div>
+</div>
+<!-- END: Data Entry Table -->
+<!-- BEGIN: Action Bar -->
+<div class="flex justify-between items-center" data-purpose="bottom-actions">
+<!-- Add Row Button -->
+<button class="bg-soc-primary hover:bg-soc-primary-hover text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+<i class="fa-solid fa-plus"></i>
+          Add Row (1/10)
+        </button>
+<!-- Submit Button -->
+<button class="bg-soc-primary hover:bg-soc-primary-hover text-white px-6 py-2.5 rounded-md text-sm font-medium transition-colors shadow-sm flex items-center gap-2">
+<i class="fa-regular fa-paper-plane"></i>
+          Submit All Rows
+        </button>
+</div>
+<!-- END: Action Bar -->
+</main>
+<!-- END: Content Body -->
+</div>
+<!-- END: Main Content Wrapper -->
+</body></html>
