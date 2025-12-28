@@ -3,6 +3,8 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { Layout } from "@/components/layout"
+
+import { LoginModal } from "@/components/login-modal"
 import { DashboardPage } from "@/pages/dashboard"
 import { DispatchReportPage } from "@/pages/dispatch-report"
 import { PrealertPage } from "@/pages/prealert"
@@ -31,6 +33,18 @@ function AppRoutes() {
           <Layout />
         }
       >
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+      </Route>
+    </Routes>
+  )
+}
+
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
 
@@ -69,6 +83,7 @@ function App() {
     <BrowserRouter>
       <ThemeProvider defaultTheme="light" storageKey="outbound-theme">
         <AuthProvider>
+          <LoginModal />
           <AppRoutes />
           <Toaster />
         </AuthProvider>

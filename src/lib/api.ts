@@ -49,6 +49,26 @@ export const authApi = {
     if (error) return { error: error.message }
     return { data }
   },
+
+  async getUserById(userId: string) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single()
+    if (error) return { error: error.message }
+    return { data }
+  },
+
+  async getUser(ops_id: string) {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('ops_id', ops_id)
+      .single()
+    if (error) return { error: error.message }
+    return { data }
+  },
 }
 
 // User lookup APIs

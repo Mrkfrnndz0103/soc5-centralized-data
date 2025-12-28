@@ -13,8 +13,12 @@ Enterprise-grade web application built with the Backstage Design System for mana
 - **Midmile Operations** - Truck request management
 
 ### Key Features
+<<<<<<< HEAD
 - ✅ Dual authentication (Backroom with Email + FTE with SeaTalk QR)
 - ✅ SeaTalk mobile app QR code authentication
+=======
+- ✅ Simple password-based authentication
+63c19918b2128376f41a955ead2f2af6f7a860ad
 - ✅ Dark/Light theme support
 - ✅ Collapsible sidebar with nested menus
 - ✅ Real-time form validation
@@ -140,7 +144,8 @@ Google Sheets (Dispatch Reports)
 
    Edit `.env` and configure:
    - `VITE_API_BASE_URL` - Your backend API URL
-   - `VITE_GOOGLE_CLIENT_ID` - Google OAuth client ID (for FTE login)
+   - `VITE_SUPABASE_URL` - Your Supabase project URL
+   - `VITE_SUPABASE_ANON_KEY` - Your Supabase anonymous key
 
 4. **Run the development server**
    ```bash
@@ -162,6 +167,7 @@ The built files will be in the `dist` directory.
 
 ### Login
 
+<<<<<<< HEAD
 **Backroom Users:**
 1. Select "Backroom" role
 2. Enter your email (@shopeemobile-external.com)
@@ -171,6 +177,11 @@ The built files will be in the `dist` directory.
 1. Open SeaTalk mobile app on your phone
 2. Scan the QR code displayed on login page
 3. Automatically logged in with your SeaTalk email account
+=======
+1. Enter your Ops ID or username
+2. Enter your password (first-time default: `SOC5-Outbound`)
+3. Change password if prompted
+>>>>>>> 63c19918b2128376f41a955ead2f2af6f7a860ad
 
 ### Dispatch Report
 
@@ -265,10 +276,15 @@ Use the existing component patterns in `src/components/ui/` as templates.
 ## Deployment
 
 ### Environment Variables (Production)
+<<<<<<< HEAD
 - Set `VITE_SUPABASE_URL` to your production Supabase URL
 - Set `VITE_SUPABASE_ANON_KEY` to your production Supabase anon key
 - Deploy SeaTalk webhook with production credentials
 - Register production domain with SeaTalk platform
+=======
+- Set `VITE_API_BASE_URL` to your production API
+- Set up CORS on your backend for the production domain
+>>>>>>> 63c19918b2128376f41a955ead2f2af6f7a860ad
 
 ### Hosting Options
 - **Vercel/Netlify**: Connect your Git repository for automatic deployments
@@ -286,12 +302,15 @@ Use the existing component patterns in `src/components/ui/` as templates.
 - Check network tab in browser DevTools
 - Ensure backend is running and CORS is configured
 
+<<<<<<< HEAD
 ### Google OAuth Not Working
 - Verify SeaTalk webhook is deployed and accessible
 - Check deep link is registered with SeaTalk platform
 - Ensure user's SeaTalk email matches database email
 - Check `seatalk_sessions` table for session records
 
+=======
+>>>>>>> 63c19918b2128376f41a955ead2f2af6f7a860ad
 ## Documentation
 
 For detailed documentation, see the [docs](./docs) folder:
