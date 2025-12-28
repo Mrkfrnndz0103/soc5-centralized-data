@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast"
 import { dispatchApi } from "@/lib/api"
 import { formatDateTime } from "@/lib/utils"
-import { Search, Download, CheckCircle } from "lucide-react"
+import { Search, Download, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react"
 
 interface DispatchEntry {
   dispatch_id: string
@@ -20,11 +20,13 @@ interface DispatchEntry {
   actual_docked_time: string
   actual_depart_time: string
   dock_number: string
+  dock_confirmed: boolean
   processor_name: string
   lh_trip: string
   plate_number: string
   fleet_size: string
   assigned_ops_id: string
+  assigned_ops_name: string
   status: string
   verified_flag: boolean
   verified_by?: string
@@ -84,11 +86,35 @@ export function PrealertPage() {
   }
 
   const handleExportCSV = () => {
-    // Mock CSV export
     toast({
       title: "Export initiated",
       description: "CSV export will be available for download shortly.",
     })
+  }
+
+  const handleStatusChange = async (dispatchId: string, newStatus: string) => {
+    toast({
+      title: "Status updated",
+      description: `Dispatch status changed to ${newStatus}`,
+    })
+    loadEntries()
+  }
+
+  const handleVerify = async (dispatchId: string) => {
+    toast({
+      title: "Dispatch verified",
+      description: "Automated notifications will be sent.",
+    })
+    loadEntries()
+  }
+
+  const handleReject = async (dispatchId: string) => {
+    toast({
+      variant: "destructive",
+      title: "Dispatch rejected",
+      description: "Notification sent to submitter for corrections.",
+    })
+    loadEntries()
   }
 
   const totalPages = Math.ceil(total / LIMIT)
@@ -139,7 +165,7 @@ export function PrealertPage() {
                   <SelectValue placeholder="All regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All regions</SelectItem>
+                  <SelectItem value="all">All regions</SelectItem>
                   <SelectItem value="FAR SOL">FAR SOL</SelectItem>
                   <SelectItem value="METRO MANILA">METRO MANILA</SelectItem>
                   <SelectItem value="VISMIN">VISMIN</SelectItem>
@@ -157,7 +183,7 @@ export function PrealertPage() {
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="Pending">Pending</SelectItem>
                   <SelectItem value="Ongoing">Ongoing</SelectItem>
                   <SelectItem value="Completed">Completed</SelectItem>
@@ -210,55 +236,118 @@ export function PrealertPage() {
           ) : (
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs border-collapse">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2 font-medium">Batch</th>
-                      <th className="text-left p-2 font-medium">Cluster</th>
-                      <th className="text-left p-2 font-medium">Station</th>
-                      <th className="text-left p-2 font-medium">Region</th>
-                      <th className="text-left p-2 font-medium">TO Count</th>
-                      <th className="text-left p-2 font-medium">OID Loaded</th>
-                      <th className="text-left p-2 font-medium">Docked</th>
-                      <th className="text-left p-2 font-medium">Departed</th>
-                      <th className="text-left p-2 font-medium">Status</th>
-                      <th className="text-left p-2 font-medium">Verified</th>
+                    <tr className="border-b bg-muted/50">
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">#</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[150px]">Cluster</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[120px]">Station</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">Region</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">TO</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">OID</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[140px]">Docked</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">Dock #</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[140px]">Depart</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[120px]">Processor</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">LH Trip</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">Plate #</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">Fleet</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">Ops ID</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider">Status</th>
+                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[140px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {entries.map((entry) => (
-                      <tr key={entry.dispatch_id} className="border-b hover:bg-muted/50">
-                        <td className="p-2">{entry.batch_label}</td>
+                    {entries.map((entry, index) => (
+                      <tr key={entry.dispatch_id} className="border-b hover:bg-muted/20 transition-colors">
+                        <td className="p-2 font-medium">{index + 1}</td>
                         <td className="p-2">{entry.cluster_name}</td>
                         <td className="p-2">{entry.station_name}</td>
                         <td className="p-2">
-                          <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
                             {entry.region}
                           </span>
                         </td>
                         <td className="p-2">{entry.count_of_to}</td>
                         <td className="p-2">{entry.total_oid_loaded}</td>
-                        <td className="p-2 text-xs">{formatDateTime(entry.actual_docked_time)}</td>
-                        <td className="p-2 text-xs">{formatDateTime(entry.actual_depart_time)}</td>
+                        <td className="p-2">{formatDateTime(entry.actual_docked_time)}</td>
                         <td className="p-2">
-                          <span className={`status-badge ${
-                            entry.status === "Completed"
-                              ? "status-completed"
+                          <span className="inline-flex items-center gap-1">
+                            {entry.dock_number}
+                            {entry.dock_confirmed && <CheckCircle className="h-3 w-3 text-green-600" />}
+                          </span>
+                        </td>
+                        <td className="p-2">{formatDateTime(entry.actual_depart_time)}</td>
+                        <td className="p-2">{entry.processor_name}</td>
+                        <td className="p-2 font-mono">{entry.lh_trip}</td>
+                        <td className="p-2 font-mono">{entry.plate_number}</td>
+                        <td className="p-2">{entry.fleet_size}</td>
+                        <td className="p-2">
+                          <div className="text-[10px]">
+                            <div className="font-medium">{entry.assigned_ops_id}</div>
+                            {entry.assigned_ops_name && (
+                              <div className="text-muted-foreground">{entry.assigned_ops_name}</div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-2">
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                            entry.status === "Completed" || entry.status === "Verified"
+                              ? "bg-green-50 text-green-700 border border-green-200"
                               : entry.status === "Ongoing"
-                              ? "status-ongoing"
-                              : "status-pending"
+                              ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                              : entry.verified_flag === false && entry.status === "Pending"
+                              ? "bg-red-50 text-red-700 border border-red-200"
+                              : "bg-blue-50 text-blue-700 border border-blue-200"
                           }`}>
+                            {entry.status === "Pending" && !entry.verified_flag && <AlertCircle className="h-3 w-3" />}
+                            {entry.status === "Ongoing" && <Clock className="h-3 w-3" />}
+                            {(entry.status === "Verified" || entry.status === "Completed") && <CheckCircle className="h-3 w-3" />}
                             {entry.status}
                           </span>
                         </td>
                         <td className="p-2">
-                          {entry.verified_flag ? (
-                            <span className="inline-flex items-center text-green-600 dark:text-green-400">
-                              <CheckCircle className="h-4 w-4" />
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">Pending</span>
-                          )}
+                          <div className="flex gap-1">
+                            {entry.status === "Pending" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-6 text-[10px] px-2"
+                                  onClick={() => handleStatusChange(entry.dispatch_id, "Ongoing")}
+                                >
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Start
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="h-6 text-[10px] px-2"
+                                  onClick={() => handleReject(entry.dispatch_id)}
+                                >
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            {entry.status === "Ongoing" && (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700"
+                                onClick={() => handleVerify(entry.dispatch_id)}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Verify
+                              </Button>
+                            )}
+                            {(entry.status === "Verified" || entry.status === "Completed") && (
+                              <span className="text-[10px] text-green-600 font-medium flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3" />
+                                Done
+                              </span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

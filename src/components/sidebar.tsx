@@ -87,6 +87,12 @@ function NavItem({ item, isCollapsed, level = 0 }: NavItemProps) {
   const paddingLeft = level === 0 ? "pl-4" : level === 1 ? "pl-10" : "pl-14"
   const shouldShowSubItems = hasSubItems && (isExpanded || isHovered) && !isCollapsed
 
+  const handleChevronClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsExpanded(!isExpanded)
+  }
+
   return (
     <div
       onMouseEnter={() => hasSubItems && setIsHovered(true)}
@@ -94,39 +100,38 @@ function NavItem({ item, isCollapsed, level = 0 }: NavItemProps) {
     >
       <Link
         to={!hasSubItems ? item.path : "#"}
-        onClick={() => hasSubItems && setIsExpanded(!isExpanded)}
+        onClick={(e) => hasSubItems && e.preventDefault()}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
+          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 group",
           paddingLeft,
           level === 0 && "font-semibold text-base",
           level > 0 && "text-sm font-medium",
           isActive && level === 0
             ? "bg-[hsl(var(--sidebar-active))] text-[hsl(var(--sidebar-active-foreground))]"
             : isActive && level > 0
-            ? "bg-white/10 text-[hsl(var(--sidebar-foreground))]"
+            ? "bg-white/5 text-[hsl(var(--sidebar-foreground))]"
             : (isParentActive && level === 0)
             ? "bg-[hsl(var(--sidebar-active))] text-[hsl(var(--sidebar-active-foreground))]"
-            : "hover:bg-white/10 text-[hsl(var(--sidebar-foreground))] hover:translate-x-1",
+            : "hover:bg-white/5 text-[hsl(var(--sidebar-foreground))] hover:translate-x-1",
           isCollapsed && level === 0 && "justify-center px-2"
         )}
       >
-        {level === 0 && "icon" in item && (
-          <span className="transition-transform duration-200">
-            {item.icon}
-          </span>
-        )}
-        {level > 0 && item.icon && (
-          <span className="transition-transform duration-200">
+        {item.icon && (
+          <span className={cn(
+            "transition-all duration-200 group-hover:scale-110",
+            level === 0 ? "text-base" : "text-sm"
+          )}>
             {item.icon}
           </span>
         )}
         {!isCollapsed && (
           <>
-            <span className="flex-1">{item.title}</span>
+            <span className="flex-1 group-hover:text-[length:calc(1em+1px)] transition-all duration-200">{item.title}</span>
             {hasSubItems && (
               <ChevronRight
+                onClick={handleChevronClick}
                 className={cn(
-                  "h-4 w-4 transition-transform duration-200",
+                  "h-4 w-4 transition-all duration-200 cursor-pointer hover:scale-125",
                   (isExpanded || isHovered) && "rotate-90"
                 )}
               />

@@ -4,11 +4,7 @@ import { authApi } from "@/lib/api"
 import { useToast } from "@/components/ui/use-toast"
 import { QrCode, MessageCircle, X, CheckCircle2 } from "lucide-react"
 
-interface LoginModalProps {
-  isOpen: boolean
-}
-
-export function LoginModal({ isOpen }: LoginModalProps) {
+export function LoginModal() {
   const [email, setEmail] = useState("")
   const [qrCode, setQrCode] = useState("")
   const [loading, setLoading] = useState(false)
@@ -16,18 +12,15 @@ export function LoginModal({ isOpen }: LoginModalProps) {
   const [showSuccess, setShowSuccess] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [helpMessage, setHelpMessage] = useState("")
-  const [sessionId, setSessionId] = useState("")
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
 
-  const { login } = useAuth()
+  const { login, isAuthenticated } = useAuth()
   const { toast } = useToast()
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isAuthenticated) {
       const newSessionId = `seatalk-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      setSessionId(newSessionId)
       
-      // Create session in database
       createSession(newSessionId)
       
       setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`seatalk://auth/soc5-outbound?session=${newSessionId}`)}`)
@@ -36,7 +29,7 @@ export function LoginModal({ isOpen }: LoginModalProps) {
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current)
     }
-  }, [isOpen])
+  }, [isAuthenticated])
 
   const createSession = async (sid: string) => {
     await authApi.createSeatalkSession(sid)
@@ -115,28 +108,24 @@ export function LoginModal({ isOpen }: LoginModalProps) {
     }
   }
 
-  if (!isOpen) return null
+  if (isAuthenticated) return null
 
-  // Success animation overlay
   if (showSuccess) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="absolute inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"></div>
         <div className="relative animate-in zoom-in-50 fade-in duration-500">
           <div className="relative">
-            {/* Animated success rings */}
             <div className="absolute inset-0 -m-20">
               <div className="absolute inset-0 border-4 border-green-500/30 rounded-full animate-ping"></div>
               <div className="absolute inset-0 border-4 border-green-500/20 rounded-full animate-pulse"></div>
             </div>
             
-            {/* Success icon */}
             <div className="relative bg-gradient-to-br from-green-500 to-green-600 rounded-full p-8 shadow-2xl">
               <CheckCircle2 className="w-24 h-24 text-white animate-in zoom-in-50 duration-700" />
             </div>
           </div>
           
-          {/* Success text */}
           <div className="text-center mt-8 animate-in slide-in-from-bottom-4 fade-in duration-500 delay-300">
             <h2 className="text-4xl font-bold text-white mb-2">Login Successful!</h2>
             <p className="text-gray-300 text-lg">Welcome back to SOC5 Outbound</p>
@@ -148,43 +137,33 @@ export function LoginModal({ isOpen }: LoginModalProps) {
 
   return (
     <>
-      {/* Main Login Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        {/* Backdrop with fade-in */}
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-500"></div>
 
-        {/* Modal with scale and fade animation */}
         <div className="relative w-full max-w-3xl mx-4 animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-500">
-          {/* Main card with shadow pulse */}
           <div className="bg-[#252836] rounded-2xl shadow-2xl overflow-hidden animate-shadow-pulse">
-            {/* Header with slide down */}
             <div className="text-center py-6 px-6 animate-in slide-in-from-top-4 duration-500 delay-150">
               <h1 className="text-2xl font-semibold text-white mb-1">Login to continue</h1>
               <p className="text-sm text-gray-400">Scan QR code with SeaTalk (FTE) or enter email (Backroom)</p>
             </div>
 
             <div className="flex items-center justify-center px-8 pb-8 gap-8">
-              {/* Left side - QR Code for FTE */}
               <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-50 duration-700 delay-300">
                 <div className="relative group">
-                  {/* Animated rotating border rings */}
                   <div className="absolute -inset-3 bg-gradient-to-r from-[#5a8a8f] via-[#6ac4d0] to-[#5a8a8f] rounded-3xl blur-lg opacity-60 animate-spin-slow"></div>
                   <div className="absolute -inset-2 bg-gradient-to-l from-[#4a7a7f] via-[#5a8a8f] to-[#4a7a7f] rounded-3xl blur opacity-80 animate-spin-reverse"></div>
                   
-                  {/* QR Container */}
                   <div 
                     onClick={handleQrClick}
                     className={`relative bg-gradient-to-br from-white via-gray-50 to-white p-5 rounded-2xl shadow-2xl transform transition-all duration-500 border-2 border-white/50 cursor-pointer ${
                       isQrZoomed ? 'scale-150' : 'group-hover:scale-105'
                     }`}
                   >
-                    {/* Corner decorations */}
                     <div className="absolute top-1 left-1 w-6 h-6 border-t-3 border-l-3 border-[#5a8a8f] rounded-tl-xl"></div>
                     <div className="absolute top-1 right-1 w-6 h-6 border-t-3 border-r-3 border-[#5a8a8f] rounded-tr-xl"></div>
                     <div className="absolute bottom-1 left-1 w-6 h-6 border-b-3 border-l-3 border-[#5a8a8f] rounded-bl-xl"></div>
                     <div className="absolute bottom-1 right-1 w-6 h-6 border-b-3 border-r-3 border-[#5a8a8f] rounded-br-xl"></div>
                     
-                    {/* Inner glow effect */}
                     <div className="absolute inset-2 bg-gradient-to-br from-[#5a8a8f]/10 to-transparent rounded-xl"></div>
                     
                     {qrCode ? (
@@ -195,7 +174,6 @@ export function LoginModal({ isOpen }: LoginModalProps) {
                       </div>
                     )}
                     
-                    {/* Scan indicator */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-[#5a8a8f]/50 to-transparent animate-scan"></div>
                     </div>
@@ -209,7 +187,6 @@ export function LoginModal({ isOpen }: LoginModalProps) {
                 </div>
               </div>
 
-              {/* Divider with running glow */}
               <div className="flex items-center justify-center relative animate-in fade-in duration-800 delay-200 -ml-4">
                 <div className="h-56 w-0.5 bg-gradient-to-b from-transparent via-blue-400 to-transparent relative overflow-hidden shadow-lg">
                   <div className="absolute inset-0 w-full">
@@ -226,7 +203,6 @@ export function LoginModal({ isOpen }: LoginModalProps) {
                 </div>
               </div>
 
-              {/* Right side - Email for Backroom */}
               <div className="flex-1 animate-in slide-in-from-right-4 duration-700 delay-400">
                 <form onSubmit={handleBackroomLogin} className="space-y-4">
                   <div>
@@ -274,7 +250,6 @@ export function LoginModal({ isOpen }: LoginModalProps) {
         </div>
       </div>
 
-      {/* Help Modal */}
       {showHelp && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setShowHelp(false)}></div>
@@ -322,8 +297,4 @@ export function LoginModal({ isOpen }: LoginModalProps) {
       )}
     </>
   )
-}
-
-export function LoginPage() {
-  return null
 }

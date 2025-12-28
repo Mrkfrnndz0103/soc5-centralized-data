@@ -1,15 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, TrendingUp, Users, Clock } from "lucide-react"
-import { LoginModal } from "@/pages/login"
-import { useState, useEffect } from "react"
 
 export function DashboardPage() {
-  const [showLoginModal, setShowLoginModal] = useState(false)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowLoginModal(true), 500)
-    return () => clearTimeout(timer)
-  }, [])
   const stats = [
     {
       title: "Total Dispatches",
@@ -42,10 +34,7 @@ export function DashboardPage() {
   ]
 
   return (
-    <>
-      <LoginModal isOpen={showLoginModal} />
-      
-      <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       <div>
         <h2 className="text-2xl font-bold mb-2">Welcome back!</h2>
         <p className="text-muted-foreground">Here's what's happening with your operations today.</p>
@@ -114,6 +103,5 @@ export function DashboardPage() {
         </Card>
       </div>
     </div>
-    </>
   )
 }

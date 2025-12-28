@@ -20,10 +20,10 @@ export function ThemePresetSelector() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 hover:bg-accent transition-all duration-200"
+          className="h-11 w-11 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 hover:scale-110 hover:shadow-lg group"
           aria-label="Select theme preset"
         >
-          <Palette className="h-4 w-4" />
+          <Palette className="h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">

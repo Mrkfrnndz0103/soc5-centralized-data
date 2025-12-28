@@ -438,6 +438,53 @@ OTP_EXPIRY_MINUTES=5
   - Alarm sound notification for Data Team
   - Real-time status update
 
+##Dispatch Report flow:
+- From sidebar click Menu Outbound then submenu     Dispatch Report
+- Editable table or grid appears (modern spreadsheet UI). Should be formatted properly the Spacing, Indentions, Table name should be center and generate modern table stying and design
+- Max 10 rows per session.
+- Autosave drafts to localStorage.
+- Submit All calls POST /api/submit-rows (server validates & appends rows to Dispatches sheet).
+
+**Table header (final order) & per-column behavior
+- Cluster Name — autocomplete after 3 chars, values from supabase table outbound_map.
+- Station (Hub name) — auto-filled; auto-split on multi-hub cluster.
+- Region — select list (InterSOC, RC, MM/GMA, GMA SOL, SOL, SOL IIS, VisMin). lookup value from outbound_map supabase table
+- Batch # — server assigned ordinal (1st, 2nd, 3rd...) Unique count of Cluster name encoded in col Cluser Name.
+- Count of TO — integer >= 0.
+- Total OID Loaded — integer >= 0.
+- Actual Docked Time — datetime picker.
+- Dock # — auto-filled lookup also from outbound_map; editable; requires per-row dock_confirmed before submit.
+- Actual Depart Time — datetime picker; validated >= docked time.
+- Name of Processor — autocomplete after 3 chars.
+- LH Trip # — must start with LT, uppercase;
+- Plate # — uppercase;
+- Fleet Size — select: 4WH, 6W, 6WF, 10WH, CV; 
+- Assigned PIC / OPS Coor — OPS ID input; auto-populates name, data is in users table.
+
+* Multi-hub auto-split behavior
+- If cluster value maps to multiple hub rows (in outbound_map), UI auto-splits to N rows and fills Station per row.
+- Notify user with toast: "Cluster maps to N hubs — added N row(s)."
+- Validation rules (client + server) Client:
+- Required: cluster_name, station_name, region, - count_of_to, total_oid_loaded, dock_number (confirmed), actual_docked_time, assigned_ops_id.
+Numeric ints >= 0 for counts.
+actual_depart_time >= actual_docked_time.
+LH Trip/Plate uppercase enforced client-side.
+Max rows per submission: 50. Server (definitive):
+rows.length <= 50.
+
+** Required fields check.
+- Numeric validations.
+- Date ordering check.
+- LH Trip regex: ^LT[A-Z0-9]+$ (server uppercases).
+- Plate regex: ^[A-Z0-9\s-]+$ (server uppercases).
+- dock_confirmed must be true.
+- Partial success allowed; return per-row result.
+- Draft persistence (localStorage)
+- Autosave every ~10s and on key actions.
+- Key pattern: drafts:{ops_id}:submit_report:{session_id}.
+- Retention default: 7 days.
+- Export draft to JSON if needed.
+
 ### 4.2 Prealert Page (Data Team Workspace)
 - **Users**: Data Team, Admin
 - **Function**: Verify and cross-check dispatch reports

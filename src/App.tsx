@@ -1,12 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import { AuthProvider } from "@/contexts/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/toaster"
 import { Layout } from "@/components/layout"
-
-import { LoginModal } from "@/components/login-modal"
 import { DashboardPage } from "@/pages/dashboard"
 import { DispatchReportPage } from "@/pages/dispatch-report"
+import { DispatchMonitoringPage } from "@/pages/dispatch-monitoring"
 import { PrealertPage } from "@/pages/prealert"
 
 // Placeholder pages for other routes
@@ -26,30 +25,12 @@ function PlaceholderPage({ title }: { title: string }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Protected routes - Direct to dashboard */}
-      <Route
-        path="/"
-        element={
-          <Layout />
-        }
-      >
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-      </Route>
-    </Routes>
-  )
-}
-
-
-function AppRoutes() {
-  return (
-    <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
 
         {/* Outbound routes */}
-        <Route path="outbound/dispatch-monitoring" element={<PlaceholderPage title="Dispatch Monitoring" />} />
+        <Route path="outbound/dispatch-monitoring" element={<DispatchMonitoringPage />} />
         <Route path="outbound/dispatch-report" element={<DispatchReportPage />} />
         <Route path="outbound/prealert" element={<PrealertPage />} />
         <Route path="outbound/bay-allocation" element={<PlaceholderPage title="Per Bay Allocation" />} />
@@ -81,13 +62,12 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider defaultTheme="light" storageKey="outbound-theme">
-        <AuthProvider>
-          <LoginModal />
+      <AuthProvider>
+        <ThemeProvider defaultTheme="light" storageKey="outbound-theme">
           <AppRoutes />
           <Toaster />
-        </AuthProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

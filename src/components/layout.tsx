@@ -1,21 +1,13 @@
 import { useState, useEffect } from "react"
-import { Outlet, useNavigate, useLocation } from "react-router-dom"
-import { Menu, LogOut, User, Bell, Search, Settings } from "lucide-react"
+import { Outlet, useLocation } from "react-router-dom"
+import { Search, Mail, Bell, Calendar, Settings, User, Home, ChevronRight, LayoutDashboard, Eye, FileText, AlertCircle, Grid3x3, Briefcase, TrendingUp, Truck, Keyboard } from "lucide-react"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ThemePresetSelector } from "@/components/theme-preset-selector"
 import { ChatPopup } from "@/components/chat-popup"
 import { useAuth } from "@/contexts/auth-context"
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 const pageTitle: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -31,117 +23,151 @@ const pageTitle: Record<string, string> = {
 }
 
 export function Layout() {
+  const { user } = useAuth()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
   const location = useLocation()
+  const [lastPath, setLastPath] = useState(location.pathname)
+  const searchInputRef = useState<HTMLInputElement | null>(null)[0]
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const handleLogout = () => {
-    logout()
-    navigate("/login")
-  }
+  useEffect(() => {
+    if (location.pathname !== lastPath) {
+      setIsSidebarCollapsed(false)
+      setLastPath(location.pathname)
+    }
+  }, [location.pathname, lastPath])
+
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault()
+        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement
+        searchInput?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [])
 
   const currentPageTitle = pageTitle[location.pathname] || "Outbound Tool"
 
+  const handleSidebarClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (target.closest('a') || target.closest('button')) {
+      return
+    }
+    setIsSidebarCollapsed(!isSidebarCollapsed)
+  }
+
+  const getPageIcon = () => {
+    const path = location.pathname
+    if (path === "/dashboard") return <LayoutDashboard className="h-3 w-3" />
+    if (path === "/outbound/dispatch-monitoring") return <Eye className="h-3 w-3" />
+    if (path === "/outbound/dispatch-report") return <FileText className="h-3 w-3" />
+    if (path === "/outbound/prealert") return <AlertCircle className="h-3 w-3" />
+    if (path === "/outbound/bay-allocation") return <Grid3x3 className="h-3 w-3" />
+    if (path.startsWith("/outbound/admin")) return <Briefcase className="h-3 w-3" />
+    if (path.startsWith("/kpi")) return <TrendingUp className="h-3 w-3" />
+    if (path.startsWith("/midmile")) return <Truck className="h-3 w-3" />
+    return <Home className="h-3 w-3" />
+  }
+
+  const getUserAvatar = () => {
+    const avatars = [
+      "from-orange-400 to-pink-400",
+      "from-blue-400 to-purple-400",
+      "from-green-400 to-teal-400",
+      "from-red-400 to-orange-400",
+      "from-purple-400 to-pink-400"
+    ]
+    const hash = (user?.name || "").split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    return avatars[hash % avatars.length]
+  }
+
   return (
     <div className="app-container flex h-full overflow-hidden bg-background">
-      <Sidebar
-        isCollapsed={isSidebarCollapsed}
-        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      />
+      <div 
+        onClick={handleSidebarClick}
+        className="cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg"
+      >
+        <Sidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
+      </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-20 items-center justify-between bg-card px-8 border-b">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="h-9 w-9 hover:bg-accent transition-all duration-200"
-            >
-              <Menu className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {currentPageTitle}
-            </h1>
+      <div className="flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out">
+        <header className="flex h-20 items-center justify-between bg-card px-8 border-b shadow-md">
+          {/* Modern Search Bar */}
+          <div className="flex items-center gap-3 flex-1 max-w-md">
+            <div className="relative w-full group">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-lg blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-primary z-10 transition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
+              <Input
+                placeholder="Search tasks, reports, or navigate..."
+                className="relative z-10 pl-14 pr-20 h-12 text-base font-medium bg-primary/5 border-2 border-primary/30 rounded-lg focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:scale-[1.02] hover:border-primary/60 hover:-translate-y-0.5"
+              />
+              <kbd className="absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none inline-flex h-7 select-none items-center gap-1 rounded-md border-2 border-primary/40 bg-primary/15 px-2.5 font-mono text-sm font-bold text-primary shadow-sm transition-all duration-300 group-hover:scale-110 group-hover:border-primary/60">
+                <Keyboard className="h-4 w-4" />
+                /
+              </kbd>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-accent transition-all duration-200">
-              <Bell className="h-4 w-4" />
+          {/* Right Side Icons and User Info */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="ghost" size="icon" className="h-11 w-11 hover:bg-accent/50 rounded-xl flex-shrink-0 transition-all duration-300 hover:scale-110 hover:shadow-lg group">
+              <Mail className="h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:-rotate-12" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-accent transition-all duration-200">
-              <Search className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-11 w-11 hover:bg-accent/50 rounded-xl flex-shrink-0 transition-all duration-300 hover:scale-110 hover:shadow-lg group">
+              <Bell className="h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 group-hover:animate-pulse" />
             </Button>
 
-            <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-accent transition-all duration-200">
-              <Settings className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-11 w-11 hover:bg-accent/50 rounded-xl flex-shrink-0 transition-all duration-300 hover:scale-110 hover:shadow-lg group">
+              <Calendar className="h-5 w-5 transition-all duration-300 group-hover:scale-110" />
             </Button>
 
-            <div className="w-px h-6 bg-border" />
+            <Button variant="ghost" size="icon" className="h-11 w-11 hover:bg-accent/50 rounded-xl flex-shrink-0 transition-all duration-300 hover:scale-110 hover:shadow-lg group">
+              <Settings className="h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-90" />
+            </Button>
+
+            <div className="w-px h-6 bg-border ml-2 flex-shrink-0" />
 
             <ThemePresetSelector />
             <ThemeToggle />
 
-            <div className="text-right">
-              <div className="text-2xl font-bold tabular-nums tracking-tight">
-                {currentTime.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  hour12: false,
-                })}
+            <div className="w-px h-6 bg-border flex-shrink-0" />
+
+            {/* User Info */}
+            <div className="flex items-center gap-3 pl-2 min-w-0">
+              <div className="text-right min-w-0 max-w-[200px]">
+                <div className="text-m font-semibold leading-tight truncate">{user?.name || "User"}</div>
+                <div className="text-[12px] text-muted-foreground truncate">{user?.role || "Role"}</div>
               </div>
-              <div className="text-sm font-semibold text-muted-foreground">
-                {currentTime.toLocaleDateString("en-US", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+              <div className={`h-11 w-11 rounded-full bg-gradient-to-br ${getUserAvatar()} flex items-center justify-center shadow-md flex-shrink-0`}>
+                <User className="h-6 w-6 text-white" />
               </div>
             </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2 h-9 hover:bg-accent transition-all duration-200">
-                  <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold text-xs">
-                    {user?.name?.charAt(0) || user?.ops_id?.charAt(0) || "U"}
-                  </div>
-                  <span className="font-semibold text-sm">{user?.name || user?.ops_id}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem disabled>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>
-                    {user?.role === "FTE" ? user?.email : `Ops ID: ${user?.ops_id}`}
-                  </span>
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled>
-                  Role: {user?.role}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </header>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="p-8">
+          <div className="p-6">
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold mb-2">{currentPageTitle}</h1>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                {getPageIcon()}
+                <span>Home</span>
+                <ChevronRight className="h-3 w-3" />
+                <span className="text-foreground font-medium">{currentPageTitle}</span>
+              </div>
+            </div>
             <Outlet />
           </div>
         </div>

@@ -125,7 +125,7 @@ Enterprise-grade web application for managing outbound dispatch operations with 
   - Real-time data synchronization
 - **Final Status**: Auto "Done" status update
 
-### 3.4 Outbound Dispatch Page
+### 3.4 Dispatch Monitoring Page
 - **Users**: All roles (view access)
 - **Function**: Historical dispatch data repository
 - **Features**:
