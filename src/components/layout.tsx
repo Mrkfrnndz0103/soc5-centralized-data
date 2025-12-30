@@ -1,3 +1,4 @@
+import type React from "react"
 import { useState, useEffect } from "react"
 import { Outlet, useLocation } from "react-router-dom"
 import { Search, Mail, Bell, Calendar, Settings, User, Home, ChevronRight, LayoutDashboard, Eye, FileText, AlertCircle, Grid3x3, Briefcase, TrendingUp, Truck, Keyboard } from "lucide-react"
@@ -5,7 +6,6 @@ import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { ThemePresetSelector } from "@/components/theme-preset-selector"
 import { ChatPopup } from "@/components/chat-popup"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -57,17 +57,18 @@ export function Layout() {
     setIsSidebarCollapsed(!isSidebarCollapsed)
   }
 
-  const getPageIcon = () => {
+  const getPageIcon = (size: "sm" | "lg" = "sm") => {
+    const iconClassName = size === "lg" ? "h-5 w-5" : "h-4 w-4"
     const path = location.pathname
-    if (path === "/dashboard") return <LayoutDashboard className="h-3 w-3" />
-    if (path === "/outbound/dispatch-monitoring") return <Eye className="h-3 w-3" />
-    if (path === "/outbound/dispatch-report") return <FileText className="h-3 w-3" />
-    if (path === "/outbound/prealert") return <AlertCircle className="h-3 w-3" />
-    if (path === "/outbound/bay-allocation") return <Grid3x3 className="h-3 w-3" />
-    if (path.startsWith("/outbound/admin")) return <Briefcase className="h-3 w-3" />
-    if (path.startsWith("/kpi")) return <TrendingUp className="h-3 w-3" />
-    if (path.startsWith("/midmile")) return <Truck className="h-3 w-3" />
-    return <Home className="h-3 w-3" />
+    if (path === "/dashboard") return <LayoutDashboard className={iconClassName} />
+    if (path === "/outbound/dispatch-monitoring") return <Eye className={iconClassName} />
+    if (path === "/outbound/dispatch-report") return <FileText className={iconClassName} />
+    if (path === "/outbound/prealert") return <AlertCircle className={iconClassName} />
+    if (path === "/outbound/bay-allocation") return <Grid3x3 className={iconClassName} />
+    if (path.startsWith("/outbound/admin")) return <Briefcase className={iconClassName} />
+    if (path.startsWith("/kpi")) return <TrendingUp className={iconClassName} />
+    if (path.startsWith("/midmile")) return <Truck className={iconClassName} />
+    return <Home className={iconClassName} />
   }
 
   const getUserAvatar = () => {
@@ -95,10 +96,21 @@ export function Layout() {
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden transition-all duration-300 ease-in-out">
-        <header className="flex h-20 items-center justify-between bg-card px-8 border-b shadow-md">
+        <header className="grid h-20 grid-cols-[auto,1fr,auto] items-center gap-6 bg-card px-8 border-b shadow-md">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border bg-gradient-to-br from-primary/15 to-primary/5 text-primary shadow-sm ring-1 ring-primary/10">
+                {getPageIcon("lg")}
+              </span>
+              <span className="text-foreground font-extrabold text-2xl lg:text-3xl tracking-tight truncate">
+                {currentPageTitle}
+              </span>
+            </div>
+          </div>
+
           {/* Modern Search Bar */}
-          <div className="flex items-center gap-3 flex-1 max-w-md">
-            <div className="relative w-full group">
+          <div className="flex items-center justify-center">
+            <div className="relative w-full max-w-md group">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-lg blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-primary z-10 transition-all duration-300 group-hover:scale-125 group-hover:rotate-12" />
               <Input
@@ -113,7 +125,7 @@ export function Layout() {
           </div>
 
           {/* Right Side Icons and User Info */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-11 w-11 hover:bg-accent/50 rounded-xl flex-shrink-0 transition-all duration-300 hover:scale-110 hover:shadow-lg group">
               <Mail className="h-5 w-5 transition-all duration-300 group-hover:scale-110 group-hover:-rotate-12" />
             </Button>
@@ -132,7 +144,6 @@ export function Layout() {
 
             <div className="w-px h-6 bg-border ml-2 flex-shrink-0" />
 
-            <ThemePresetSelector />
             <ThemeToggle />
 
             <div className="w-px h-6 bg-border flex-shrink-0" />
@@ -151,14 +162,13 @@ export function Layout() {
         </header>
 
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold mb-2">{currentPageTitle}</h1>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {getPageIcon()}
-                <span>Home</span>
-                <ChevronRight className="h-3 w-3" />
-                <span className="text-foreground font-medium">{currentPageTitle}</span>
+          <div className="px-6 pb-6 pt-4">
+            <div className="mb-4">
+              <div className="inline-flex items-center gap-2 rounded-full border bg-muted/30 px-3 py-1.5 text-sm text-muted-foreground shadow-sm">
+                <span className="text-primary">{getPageIcon("sm")}</span>
+                <span className="font-medium">Home</span>
+                <ChevronRight className="h-4 w-4" />
+                <span className="text-foreground font-semibold">{currentPageTitle}</span>
               </div>
             </div>
             <Outlet />

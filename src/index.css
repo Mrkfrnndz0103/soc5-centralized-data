@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -32,7 +32,7 @@
     --sidebar-foreground: 30 15% 85%;
     --sidebar-active: 45 100% 51%;
     --sidebar-active-foreground: 20 14% 12%;
-    --sidebar-submenu-active: 255 255 255 / 0.1;
+    --sidebar-submenu-active: 340 20% 16%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -65,7 +65,7 @@
     --sidebar-foreground: 30 15% 75%;
     --sidebar-active: 45 100% 51%;
     --sidebar-active-foreground: 20 14% 12%;
-    --sidebar-submenu-active: 255 255 255 / 0.1;
+    --sidebar-submenu-active: 340 20% 16%;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -111,12 +111,47 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    @apply bg-background text-foreground font-sans;
+    font-size: 16px;
+    line-height: 1.5;
+    zoom: 1;
+    transform: scale(1);
+    transform-origin: 0 0;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
+    @apply font-display font-semibold tracking-tight;
+  }
+  
+  /* Ensure proper scaling */
+  html {
+    zoom: 1;
+    transform: scale(1);
+    transform-origin: 0 0;
+  }
+  
+  #root {
+    zoom: 1;
+    transform: scale(1);
+    transform-origin: 0 0;
+  }
+  
+  /* Responsive base font sizes */
+  @media (max-width: 640px) {
+    body {
+      font-size: 14px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    body {
+      font-size: 17px;
+    }
+  }
+  
+  @media (min-width: 1280px) {
+    body {
+      font-size: 18px;
+    }
   }
 }
 

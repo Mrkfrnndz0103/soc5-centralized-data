@@ -1,3 +1,4 @@
+import type React from "react"
 import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import { ChevronRight, LayoutDashboard, Package, TrendingUp, Truck, Bell, HelpCircle, Settings, Eye, FileText, AlertCircle, Grid3x3, Users, Calendar, Clock, Briefcase, BarChart3, Zap, MapPin } from "lucide-react"
@@ -84,6 +85,9 @@ function NavItem({ item, isCollapsed, level = 0 }: NavItemProps) {
   const isActive = location.pathname === item.path
   const isParentActive = location.pathname.startsWith(item.path + "/")
 
+  const isTopLevelHighlighted = level === 0 && (isActive || isParentActive)
+  const isSubItemActive = level > 0 && isActive
+
   const paddingLeft = level === 0 ? "pl-4" : level === 1 ? "pl-10" : "pl-14"
   const shouldShowSubItems = hasSubItems && (isExpanded || isHovered) && !isCollapsed
 
@@ -102,17 +106,17 @@ function NavItem({ item, isCollapsed, level = 0 }: NavItemProps) {
         to={!hasSubItems ? item.path : "#"}
         onClick={(e) => hasSubItems && e.preventDefault()}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 group",
+          "relative flex h-11 items-center gap-3 overflow-hidden rounded-xl py-3 pr-4 text-sm transition-all duration-200 group",
           paddingLeft,
           level === 0 && "font-semibold text-base",
           level > 0 && "text-sm font-medium",
-          isActive && level === 0
-            ? "bg-[hsl(var(--sidebar-active))] text-[hsl(var(--sidebar-active-foreground))]"
-            : isActive && level > 0
-            ? "bg-white/5 text-[hsl(var(--sidebar-foreground))]"
-            : (isParentActive && level === 0)
-            ? "bg-[hsl(var(--sidebar-active))] text-[hsl(var(--sidebar-active-foreground))]"
-            : "hover:bg-white/5 text-[hsl(var(--sidebar-foreground))] hover:translate-x-1",
+          isTopLevelHighlighted
+            ? "text-white bg-gradient-to-r from-[#1f2230] to-[#2b2f45] shadow-[inset_0_0_0_1px_rgba(123,97,255,0.15)] after:content-[''] after:absolute after:right-0 after:top-2 after:bottom-2 after:w-1 after:rounded-full after:bg-[#7B61FF]"
+            : isSubItemActive
+            ? "text-[#f97316] bg-[hsl(var(--sidebar-submenu-active))] shadow-[inset_0_0_0_1px_rgba(249,115,22,0.12)] before:content-[''] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-[#f97316]"
+            : level === 0
+            ? "text-[hsl(var(--sidebar-foreground))] hover:text-white hover:bg-gradient-to-r hover:from-[#1f2230] hover:to-[#2b2f45] hover:shadow-[inset_0_0_0_1px_rgba(123,97,255,0.15)] hover:after:content-[''] hover:after:absolute hover:after:right-0 hover:after:top-2 hover:after:bottom-2 hover:after:w-1 hover:after:rounded-full hover:after:bg-[#7B61FF]"
+            : "text-[#94a3b8] hover:text-[#f97316] hover:bg-[hsl(var(--sidebar-submenu-active))] hover:shadow-[inset_0_0_0_1px_rgba(249,115,22,0.12)] hover:before:content-[''] hover:before:absolute hover:before:left-0 hover:before:top-2 hover:before:bottom-2 hover:before:w-1 hover:before:rounded-full hover:before:bg-[#f97316]",
           isCollapsed && level === 0 && "justify-center px-2"
         )}
       >

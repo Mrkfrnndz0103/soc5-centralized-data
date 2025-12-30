@@ -12,6 +12,216 @@ All API calls use the Supabase client configured with:
 - **Base URL**: `VITE_SUPABASE_URL`
 - **Auth**: Anon key for public operations, JWT for authenticated
 
+## Dispatch Report API
+
+### dispatchApi.getReports()
+
+Get all dispatch reports with optional filtering.
+
+```typescript
+const { data, error } = await dispatchApi.getReports(filters?)
+```
+
+**Parameters:**
+- `filters` (object, optional): 
+  - `date` (string): Filter by date
+  - `cluster` (string): Filter by cluster name
+  - `station` (string): Filter by station
+
+**Returns:**
+```typescript
+{
+  data: DispatchReport[] | null
+  error: string | null
+}
+```
+
+**DispatchReport Interface:**
+```typescript
+interface DispatchReport {
+  id: string
+  batch_number: number
+  cluster_name: string
+  station: string
+  region: string
+  count_to: number
+  total_oid_loaded: number
+  actual_docked_time: string
+  dock_number: string
+  dock_confirmed: boolean
+  actual_depart_time: string
+  processor_name: string
+  lh_trip_number: string
+  plate_number: string
+  fleet_size: '4WH' | '6W' | '6WF' | '10WH' | 'CV'
+  assigned_pic: string
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+```
+
+### dispatchApi.createReport()
+
+Create a new dispatch report.
+
+```typescript
+const { data, error } = await dispatchApi.createReport(reportData)
+```
+
+**Parameters:**
+- `reportData` (object): Dispatch report data (excluding auto-generated fields)
+
+**Returns:**
+```typescript
+{
+  data: DispatchReport | null
+  error: string | null
+}
+```
+
+### dispatchApi.updateReport()
+
+Update an existing dispatch report.
+
+```typescript
+const { data, error } = await dispatchApi.updateReport(id, updates)
+```
+
+**Parameters:**
+- `id` (string): Report ID
+- `updates` (object): Fields to update
+
+**Returns:**
+```typescript
+{
+  data: DispatchReport | null
+  error: string | null
+}
+```
+
+### dispatchApi.deleteReport()
+
+Delete a dispatch report.
+
+```typescript
+const { data, error } = await dispatchApi.deleteReport(id)
+```
+
+**Parameters:**
+- `id` (string): Report ID
+
+**Returns:**
+```typescript
+{
+  data: { success: boolean } | null
+  error: string | null
+}
+```
+
+### dispatchApi.getClusters()
+
+Get available cluster names for autocomplete.
+
+```typescript
+const { data, error } = await dispatchApi.getClusters(query?)
+```
+
+**Parameters:**
+- `query` (string, optional): Search query (min 3 characters)
+
+**Returns:**
+```typescript
+{
+  data: string[] | null
+  error: string | null
+}
+```
+
+### dispatchApi.getProcessors()
+
+Get available processor names for autocomplete.
+
+```typescript
+const { data, error } = await dispatchApi.getProcessors(query?)
+```
+
+**Parameters:**
+- `query` (string, optional): Search query (min 3 characters)
+
+**Returns:**
+```typescript
+{
+  data: string[] | null
+  error: string | null
+}
+```
+
+### dispatchApi.getStationByCluster()
+
+Get station and region for a given cluster.
+
+```typescript
+const { data, error } = await dispatchApi.getStationByCluster(clusterName)
+```
+
+**Parameters:**
+- `clusterName` (string): Cluster name
+
+**Returns:**
+```typescript
+{
+  data: {
+    station: string
+    region: string
+  } | null
+  error: string | null
+}
+```
+
+### dispatchApi.getNextDockNumber()
+
+Get next available dock number.
+
+```typescript
+const { data, error } = await dispatchApi.getNextDockNumber()
+```
+
+**Returns:**
+```typescript
+{
+  data: string | null
+  error: string | null
+}
+```
+
+### dispatchApi.validateDockAssignment()
+
+Validate dock assignment availability.
+
+```typescript
+const { data, error } = await dispatchApi.validateDockAssignment(dockNumber, dateTime)
+```
+
+**Parameters:**
+- `dockNumber` (string): Dock number
+- `dateTime` (string): Date and time
+
+**Returns:**
+```typescript
+{
+  data: {
+    available: boolean
+    conflict?: {
+      report_id: string
+      batch_number: number
+      cluster_name: string
+    }
+  } | null
+  error: string | null
+}
+```
+
 ## Authentication API
 
 ### authApi.login()

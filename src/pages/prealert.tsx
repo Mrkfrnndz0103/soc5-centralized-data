@@ -123,15 +123,11 @@ export function PrealertPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-serif font-bold">Prealert Database</h1>
-          <p className="text-muted-foreground">
-            Consolidated list of all dispatch reports
-          </p>
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
         </div>
-        <Button variant="outline" onClick={handleExportCSV}>
-          <Download className="mr-2 h-4 w-4" />
-          Export CSV
-        </Button>
       </div>
 
       {/* Filters */}

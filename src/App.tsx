@@ -3,6 +3,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/toaster"
 import { Layout } from "@/components/layout"
+import { AnimatedPage } from "@/components/animated-page"
 import { DashboardPage } from "@/pages/dashboard"
 import { DispatchReportPage } from "@/pages/dispatch-report"
 import { DispatchMonitoringPage } from "@/pages/dispatch-monitoring"
@@ -12,7 +13,7 @@ import { PrealertPage } from "@/pages/prealert"
 function PlaceholderPage({ title }: { title: string }) {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-serif font-bold">{title}</h1>
+      <h1 className="text-3xl font-display font-bold">{title}</h1>
       <div className="rounded-lg border bg-card p-12 text-center">
         <p className="text-muted-foreground">
           This page is under development. Content will be added soon.
@@ -27,30 +28,94 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="dashboard" element={
+          <AnimatedPage>
+            <DashboardPage />
+          </AnimatedPage>
+        } />
 
         {/* Outbound routes */}
-        <Route path="outbound/dispatch-monitoring" element={<DispatchMonitoringPage />} />
-        <Route path="outbound/dispatch-report" element={<DispatchReportPage />} />
-        <Route path="outbound/prealert" element={<PrealertPage />} />
-        <Route path="outbound/bay-allocation" element={<PlaceholderPage title="Per Bay Allocation" />} />
+        <Route path="outbound/dispatch-monitoring" element={
+          <AnimatedPage>
+            <DispatchMonitoringPage />
+          </AnimatedPage>
+        } />
+        <Route path="outbound/dispatch-report" element={
+          <AnimatedPage>
+            <DispatchReportPage />
+          </AnimatedPage>
+        } />
+        <Route path="outbound/prealert" element={
+          <AnimatedPage>
+            <PrealertPage />
+          </AnimatedPage>
+        } />
+        <Route path="outbound/bay-allocation" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Per Bay Allocation" />
+          </AnimatedPage>
+        } />
 
         {/* Outbound Admin routes */}
-        <Route path="outbound/admin/attendance" element={<PlaceholderPage title="Attendance" />} />
-        <Route path="outbound/admin/masterfile" element={<PlaceholderPage title="Masterfile" />} />
-        <Route path="outbound/admin/attendance-history" element={<PlaceholderPage title="Attendance History" />} />
-        <Route path="outbound/admin/breaktime" element={<PlaceholderPage title="Breaktime Management" />} />
-        <Route path="outbound/admin/leave" element={<PlaceholderPage title="Leave Management" />} />
-        <Route path="outbound/admin/workstation" element={<PlaceholderPage title="Workstation" />} />
+        <Route path="outbound/admin/attendance" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Attendance" />
+          </AnimatedPage>
+        } />
+        <Route path="outbound/admin/masterfile" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Masterfile" />
+          </AnimatedPage>
+        } />
+        <Route path="outbound/admin/attendance-history" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Attendance History" />
+          </AnimatedPage>
+        } />
+        <Route path="outbound/admin/breaktime" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Breaktime Management" />
+          </AnimatedPage>
+        } />
+        <Route path="outbound/admin/leave" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Leave Management" />
+          </AnimatedPage>
+        } />
+        <Route path="outbound/admin/workstation" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Workstation" />
+          </AnimatedPage>
+        } />
 
         {/* KPI & Compliance routes */}
-        <Route path="kpi/mdt" element={<PlaceholderPage title="MDT" />} />
-        <Route path="kpi/workstation" element={<PlaceholderPage title="Workstation" />} />
-        <Route path="kpi/productivity" element={<PlaceholderPage title="Productivity" />} />
-        <Route path="kpi/intraday" element={<PlaceholderPage title="Intraday" />} />
+        <Route path="kpi/mdt" element={
+          <AnimatedPage>
+            <PlaceholderPage title="MDT" />
+          </AnimatedPage>
+        } />
+        <Route path="kpi/workstation" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Workstation" />
+          </AnimatedPage>
+        } />
+        <Route path="kpi/productivity" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Productivity" />
+          </AnimatedPage>
+        } />
+        <Route path="kpi/intraday" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Intraday" />
+          </AnimatedPage>
+        } />
 
         {/* Midmile routes */}
-        <Route path="midmile/truck-request" element={<PlaceholderPage title="Truck Request" />} />
+        <Route path="midmile/truck-request" element={
+          <AnimatedPage>
+            <PlaceholderPage title="Truck Request" />
+          </AnimatedPage>
+        } />
 
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

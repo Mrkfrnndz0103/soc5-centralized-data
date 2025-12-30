@@ -1,7 +1,9 @@
+import { DispatchReportTable } from "@/components/dispatch-report-table"
+
 export function DispatchReportPage() {
   return (
-    <div className="space-y-6">
-      {/* Page content will be added here */}
+    <div className="h-full">
+      <DispatchReportTable />
     </div>
   )
 }

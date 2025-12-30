@@ -35,10 +35,6 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Welcome back!</h2>
-        <p className="text-muted-foreground">Here's what's happening with your operations today.</p>
-      </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
@@ -52,7 +48,7 @@ export function DashboardPage() {
                 <Icon className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{stat.value}</div>
+                <div className="text-2xl lg:text-3xl font-bold">{stat.value}</div>
                 <p className="text-xs text-green-600 font-semibold mt-1">
                   {stat.change} from last month
                 </p>
