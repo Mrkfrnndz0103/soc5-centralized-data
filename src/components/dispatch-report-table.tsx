@@ -4,7 +4,7 @@ import {
   Plus, 
   Trash2, 
   Save, 
-  RotateCcw, 
+  RotateCcw,  
   MapPin,
   User,
   Calendar,
@@ -876,30 +876,40 @@ export function DispatchReportTable() {
 
       {/* Escalations Table */}
       <div 
-        className="bg-white dark:bg-gray-900/40 rounded-2xl shadow-sm ring-1 ring-black/5 dark:ring-white/10 overflow-hidden p-5"
+        className="bg-white rounded-2xl shadow-lg overflow-hidden"
+        style={{
+          padding: '20px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+        }}
       >
-        <div ref={tableRef} className="overflow-x-auto pb-2 subtle-scrollbar">
-          <table className="w-full min-w-max border-collapse text-sm">
+        <div ref={tableRef} className="overflow-x-auto">
+          <table className="w-full border-collapse">
             <thead>
-              <tr className="h-12 bg-slate-50/80 dark:bg-gray-800/50">
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Batch #</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Cluster Name</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Station</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Region</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Count of TO</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Total OID Loaded</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Actual Docked Time</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Dock #</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Actual Depart Time</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Name of Processor</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">LH Trip #</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Plate #</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Fleet Size</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Assigned PIC / OPS Coor</th>
-                <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.12em] whitespace-nowrap text-slate-500 dark:text-slate-400 border-b border-slate-200/70 dark:border-gray-800">Actions</th>
+              <tr 
+                style={{
+                  height: '56px',
+                  background: '#F8FAFC',
+                  borderBottom: '1px solid #E2E8F0'
+                }}
+              >
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Batch #</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Cluster Name</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Station</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Region</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Count of TO</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Total OID Loaded</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Actual Docked Time</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Dock #</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Actual Depart Time</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Name of Processor</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>LH Trip #</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Plate #</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Fleet Size</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Assigned PIC / OPS Coor</th>
+                <th className="px-6 py-4 text-left font-semibold text-xs uppercase tracking-wider whitespace-nowrap" style={{ color: '#64748B', fontSize: '12px' }}>Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-gray-50">
               <AnimatePresence>
                 {rows.map((row, index) => (
                   <motion.tr
@@ -908,10 +918,11 @@ export function DispatchReportTable() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.05 }}
-                    className="h-14 transition-colors odd:bg-white even:bg-slate-50/50 hover:bg-sky-50/70 dark:odd:bg-transparent dark:even:bg-white/5 dark:hover:bg-sky-500/10"
+                    className="hover:bg-gradient-to-r hover:from-sky-50 hover:to-blue-50 transition-all duration-200 border-l-4 border-l-transparent hover:border-l-sky-400"
+                    style={{ height: '52px' }}
                   >
-                    <td className="px-5 py-3.5 whitespace-nowrap">
-                      <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-sky-50 text-sky-700 font-semibold text-sm ring-1 ring-sky-100/80 dark:bg-sky-500/10 dark:text-sky-300 dark:ring-sky-500/20">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-sky-100 to-sky-200 text-sky-800 font-bold text-sm shadow-sm">
                         {row.batchNumber}
                       </span>
                     </td>
