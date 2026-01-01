@@ -1,421 +1,432 @@
-import { useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { dispatchApi } from "@/lib/api"
-import { formatDateTime } from "@/lib/utils"
-import { Search, Download, CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react"
+import { Search, Download, MoreHorizontal, Folder, CheckCircle, XCircle, Tag } from "lucide-react"
 
-interface DispatchEntry {
-  dispatch_id: string
-  batch_label: string
-  batch_sequence: number
-  cluster_name: string
-  station_name: string
-  region: string
-  count_of_to: number
-  total_oid_loaded: number
-  actual_docked_time: string
-  actual_depart_time: string
-  dock_number: string
-  dock_confirmed: boolean
-  processor_name: string
-  lh_trip: string
-  plate_number: string
-  fleet_size: string
-  assigned_ops_id: string
-  assigned_ops_name: string
-  status: string
-  verified_flag: boolean
-  verified_by?: string
-  verified_at?: string
-  created_by: string
-  created_at: string
+type Status = "Pending" | "Pending-Inaccurate" | "Ongoing" | "Done"
+
+type Report = {
+  id: string
+  status: Status
+  reporter: string
+  hub: string
+  batch: string
+  lh_trip?: string
+  plate?: string
+  date: string
+  dataTeam?: string
+  submittedBy?: string
+  notes?: string
+}
+
+const HUBS = [
+  { name: "Angongo Hub", batches: ["Batch 1", "Batch 2"] },
+  { name: "Lipa Hub", batches: ["Batch 1"] },
+  { name: "Sto Tomas Hub", batches: ["Batch 1", "Batch 2", "Batch 3"] },
+]
+
+function generateSampleReports(count = 50): Report[] {
+  const statuses: Status[] = ["Pending", "Pending-Inaccurate", "Ongoing", "Done"]
+  const reporters = ["OpsCoor1", "PIC2", "OpsCoor3", "PIC4", "User5", "User6"]
+  const dataTeams = ["Team A", "Team B", "Team C"]
+  const hubs = HUBS.map((h) => h.name)
+
+  return Array.from({ length: count }).map((_, i) => {
+    const hub = hubs[i % hubs.length]
+    const batches = HUBS.find((h) => h.name === hub)!.batches
+    const batch = batches[i % batches.length]
+    const status = statuses[i % statuses.length]
+    const reporter = reporters[i % reporters.length]
+    const dataTeam = dataTeams[i % dataTeams.length]
+    const lh_trip = `LH${100 + i}`
+    const plate = `PLT-${(100 + i).toString().slice(-3)}`
+    const date = `2026-01-${String((i % 28) + 1).padStart(2, "0")}`
+
+    return {
+      id: `r${i + 1}`,
+      status,
+      reporter,
+      hub,
+      batch,
+      lh_trip,
+      plate,
+      date,
+      dataTeam,
+      submittedBy: reporter,
+      notes: `Sample note for report ${i + 1}`,
+    }
+  })
 }
 
 export function PrealertPage() {
-  const [entries, setEntries] = useState<DispatchEntry[]>([])
-  const [loading, setLoading] = useState(false)
-  const [filters, setFilters] = useState({
-    region: "",
-    status: "",
-    startDate: "",
-    endDate: "",
-    search: "",
-  })
+  const [query, setQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [hubFilter, setHubFilter] = useState<string>("")
+  const [dateFilter, setDateFilter] = useState("")
   const [page, setPage] = useState(1)
-  const [total, setTotal] = useState(0)
+  const [pageSize, setPageSize] = useState(10)
+  const [reports, setReports] = useState<Report[]>(() => generateSampleReports(50))
+  const [selectedBatch, setSelectedBatch] = useState<{ hub: string; batch: string } | null>(null)
+  const [showBatchModal, setShowBatchModal] = useState(false)
+  const [detailReport, setDetailReport] = useState<Report | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+
   const { toast } = useToast()
 
-  const LIMIT = 50
+  const countsByHub = useMemo(() => {
+    const map: Record<string, number> = {}
+    reports.forEach((r) => (map[r.hub] = (map[r.hub] || 0) + 1))
+    return map
+  }, [reports])
 
-  useEffect(() => {
-    loadEntries()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, filters])
-
-  const loadEntries = async () => {
-    setLoading(true)
-    const response = await dispatchApi.getDispatches({
-      limit: LIMIT,
-      offset: (page - 1) * LIMIT,
-      status: filters.status || undefined,
-      region: filters.region || undefined,
-      startDate: filters.startDate || undefined,
-      endDate: filters.endDate || undefined,
+  const filtered = useMemo(() => {
+    return reports.filter((r) => {
+      if (hubFilter && r.hub !== hubFilter) return false
+      if (statusFilter !== "all") {
+        if (statusFilter === "Pending-Green" && r.status !== "Pending") return false
+        if (statusFilter === "Pending-Red" && r.status !== "Pending-Inaccurate") return false
+        if (statusFilter === "Ongoing" && r.status !== "Ongoing") return false
+        if (statusFilter === "Done" && r.status !== "Done") return false
+      }
+      if (dateFilter && r.date !== dateFilter) return false
+      if (query) {
+        const q = query.toLowerCase()
+        if (
+          !(
+            r.reporter.toLowerCase().includes(q) ||
+            r.hub.toLowerCase().includes(q) ||
+            r.batch.toLowerCase().includes(q) ||
+            (r.lh_trip || "").toLowerCase().includes(q) ||
+            (r.plate || "").toLowerCase().includes(q)
+          )
+        )
+          return false
+      }
+      return true
     })
-    setLoading(false)
+  }, [reports, hubFilter, statusFilter, dateFilter, query])
 
-    if (response.data) {
-      setEntries(response.data.rows || [])
-      setTotal(response.data.total || 0)
-    } else if (response.error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to load entries",
-        description: response.error,
-      })
-    }
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+
+  const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize)
+
+  const setStatusForReport = (id: string, newStatus: Status) => {
+    setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r)))
+    toast({ title: "Status updated", description: `Report ${id} set to ${newStatus}` })
   }
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters({ ...filters, [key]: value === "all" ? "" : value })
-    setPage(1)
+  const openBatch = (hub: string, batch: string) => {
+    setSelectedBatch({ hub, batch })
+    setShowBatchModal(true)
   }
 
-  const handleExportCSV = () => {
-    toast({
-      title: "Export initiated",
-      description: "CSV export will be available for download shortly.",
-    })
+  const closeBatch = () => {
+    setSelectedBatch(null)
+    setShowBatchModal(false)
   }
 
-  const handleStatusChange = async (dispatchId: string, newStatus: string) => {
-    const response = await dispatchApi.verifyRows({
-      rows: [dispatchId],
-      verified_by_ops_id: "system",
-    })
-    if (response.error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to update status",
-        description: response.error,
-      })
-      return
-    }
-    toast({
-      title: "Status updated",
-      description: `Dispatch ${dispatchId} status changed to ${newStatus}`,
-    })
-    loadEntries()
+  const openDetails = (r: Report) => {
+    setDetailReport(r)
+    setShowDetailModal(true)
   }
 
-  const handleVerify = async (dispatchId: string) => {
-    const response = await dispatchApi.verifyRows({
-      rows: [dispatchId],
-      verified_by_ops_id: "system",
-      send_csv: true,
-    })
-    if (response.error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to verify dispatch",
-        description: response.error,
-      })
-      return
-    }
-    toast({
-      title: "Dispatch verified",
-      description: `Dispatch ${dispatchId} verified. Automated notifications will be sent.`,
-    })
-    loadEntries()
+  const closeDetails = () => {
+    setDetailReport(null)
+    setShowDetailModal(false)
   }
 
-  const handleReject = async (dispatchId: string) => {
-    const response = await dispatchApi.verifyRows({
-      rows: [dispatchId],
-      verified_by_ops_id: "system",
-    })
-    if (response.error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to reject dispatch",
-        description: response.error,
-      })
-      return
-    }
-    toast({
-      variant: "destructive",
-      title: "Dispatch rejected",
-      description: `Dispatch ${dispatchId} rejected. Notification sent to submitter for corrections.`,
-    })
-    loadEntries()
+  const handleExport = () => {
+    toast({ title: "Export", description: "CSV export is not yet configured." })
   }
-
-  const totalPages = Math.ceil(total / LIMIT)
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Button variant="outline" onClick={handleExportCSV}>
-            <Download className="mr-2 h-4 w-4" />
-            Export CSV
-          </Button>
-        </div>
-      </div>
+    <div className="flex gap-6">
+      {/* Sidebar */}
+      <aside className="w-72">
+        <Card className="sticky top-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Hubs</CardTitle>
+            <CardDescription className="text-sm">Compact list</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3 relative max-h-[60vh] overflow-y-auto pr-2">
+              {HUBS.map((h) => (
+                <li key={h.name} className="relative">
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      aria-expanded={!!hubFilter && hubFilter === h.name}
+                      aria-controls={`batches-${h.name}`}
+                      onClick={() => { const sel = hubFilter === h.name ? "" : h.name; setHubFilter(sel); setExpanded((s) => ({ ...s, [h.name]: !s[h.name] })); setPage(1); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const sel = hubFilter === h.name ? "" : h.name; setHubFilter(sel); setExpanded((s) => ({ ...s, [h.name]: !s[h.name] })); setPage(1); } }}
+                      className={`flex items-center gap-3 px-3 py-3 rounded w-full text-left ${hubFilter === h.name ? "bg-muted/20" : "hover:bg-muted/10"}`}
+                    >
+                      <Folder className="h-5 w-5 text-gradient" />
+                      <div>
+                        <div className="text-sm font-medium">{h.name}</div>
+                        <div className="text-xs text-muted-foreground">{countsByHub[h.name] || 0} reports</div>
+                      </div>
+                    </button>
+                  </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-          <CardDescription>Filter and search dispatch entries</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Search</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                  className="pl-9"
-                />
-              </div>
+                  {/* connector line */}
+                  <div className="absolute left-6 top-12 bottom-0 w-px bg-muted/20 ml-1" aria-hidden />
+
+                  <ul id={`batches-${h.name}`} className={`ml-9 mt-2 text-base text-muted-foreground space-y-2 ${expanded[h.name] ? 'block' : 'hidden'}`}>
+                    {h.batches.map((b) => (
+                      <li key={b}>
+                        <button
+                          className="flex items-center gap-2 py-2 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
+                          onClick={() => openBatch(h.name, b)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') openBatch(h.name, b) }}
+                        >
+                          <Tag className="h-4 w-4 text-blue-500 mr-1" aria-hidden />
+                          <span>{b}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </aside>
+
+      {/* Main content */}
+      <div className="flex-1 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-4 items-center">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+              <Input
+                placeholder="Search reporter, hub, LHTrip, plate..."
+                className="pl-11 w-96 text-base"
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setPage(1) }}
+                aria-label="Search reports"
+              />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Region</label>
-              <Select
-                value={filters.region}
-                onValueChange={(value) => handleFilterChange("region", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All regions</SelectItem>
-                  <SelectItem value="FAR SOL">FAR SOL</SelectItem>
-                  <SelectItem value="METRO MANILA">METRO MANILA</SelectItem>
-                  <SelectItem value="VISMIN">VISMIN</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) => handleFilterChange("status", value)}
-              >
+            <div className="flex items-center gap-2">
+              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1) }}>
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Pending-Green">Pending (New)</SelectItem>
+                  <SelectItem value="Pending-Red">Pending (Inaccurate)</SelectItem>
                   <SelectItem value="Ongoing">Ongoing</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Input type="date" value={dateFilter} onChange={(e) => { setDateFilter(e.target.value); setPage(1) }} aria-label="Date" />
+
+              <Button variant="outline" onClick={() => { setQuery(""); setHubFilter(""); setStatusFilter("all"); setDateFilter(""); setPage(1) }}>Reset</Button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label className="text-sm">Rows</label>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1) }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="10" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Start Date</label>
-              <Input
-                type="date"
-                value={filters.startDate}
-                onChange={(e) => handleFilterChange("startDate", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">End Date</label>
-              <Input
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => handleFilterChange("endDate", e.target.value)}
-              />
-            </div>
+            <Button variant="outline" onClick={handleExport}><Download className="mr-2 h-4 w-4" />Export CSV</Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Results */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Dispatch Entries</CardTitle>
-              <CardDescription>
-                Showing {((page - 1) * LIMIT) + 1} to {Math.min(page * LIMIT, total)} of {total} entries
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-muted-foreground">Loading entries...</div>
-            </div>
-          ) : entries.length === 0 ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-muted-foreground">No entries found</div>
-            </div>
-          ) : (
-            <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Dispatch Entries</CardTitle>
+            <CardDescription className="text-sm">Showing {filtered.length} entries — page {page} / {totalPages}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {filtered.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-muted-foreground text-base">No entries found</div>
+              </div>
+            ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs border-collapse">
+                <table className="w-full text-base border-collapse">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">#</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[150px]">Cluster</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[120px]">Station</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">Region</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">TO</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">OID</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[140px]">Docked</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">Dock #</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[140px]">Depart</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[120px]">Processor</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">LH Trip</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">Plate #</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">Fleet</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">Ops ID</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider">Status</th>
-                      <th className="p-2 text-left font-bold uppercase tracking-wider min-w-[140px]">Actions</th>
+                      <th className="p-3 text-center">Status</th>
+                      <th className="p-3 text-center">Reporter</th>
+                      <th className="p-3 text-center">Hub</th>
+                      <th className="p-3 text-center">Batch #</th>
+                      <th className="p-3 text-center">LHTrip #</th>
+                      <th className="p-3 text-center">Plate #</th>
+                      <th className="p-3 text-center">Date</th>
+                      <th className="p-3 text-center">Data Team</th>
+                      <th className="p-3 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {entries.map((entry, index) => (
-                      <tr key={entry.dispatch_id} className="border-b hover:bg-muted/20 transition-colors">
-                        <td className="p-2 font-medium">{index + 1}</td>
-                        <td className="p-2">{entry.cluster_name}</td>
-                        <td className="p-2">{entry.station_name}</td>
-                        <td className="p-2">
-                          <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                            {entry.region}
-                          </span>
-                        </td>
-                        <td className="p-2">{entry.count_of_to}</td>
-                        <td className="p-2">{entry.total_oid_loaded}</td>
-                        <td className="p-2">{formatDateTime(entry.actual_docked_time)}</td>
-                        <td className="p-2">
-                          <span className="inline-flex items-center gap-1">
-                            {entry.dock_number}
-                            {entry.dock_confirmed && <CheckCircle className="h-3 w-3 text-green-600" />}
-                          </span>
-                        </td>
-                        <td className="p-2">{formatDateTime(entry.actual_depart_time)}</td>
-                        <td className="p-2">{entry.processor_name}</td>
-                        <td className="p-2 font-mono">{entry.lh_trip}</td>
-                        <td className="p-2 font-mono">{entry.plate_number}</td>
-                        <td className="p-2">{entry.fleet_size}</td>
-                        <td className="p-2">
-                          <div className="text-[10px]">
-                            <div className="font-medium">{entry.assigned_ops_id}</div>
-                            {entry.assigned_ops_name && (
-                              <div className="text-muted-foreground">{entry.assigned_ops_name}</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-2">
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                            entry.status === "Completed" || entry.status === "Verified"
-                              ? "bg-green-50 text-green-700 border border-green-200"
-                              : entry.status === "Ongoing"
-                              ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                              : entry.verified_flag === false && entry.status === "Pending"
-                              ? "bg-red-50 text-red-700 border border-red-200"
-                              : "bg-blue-50 text-blue-700 border border-blue-200"
+                    {pageItems.map((r) => (
+                      <tr key={r.id} className="border-b hover:shadow-md hover:-translate-y-0.5 transition-all group" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') openDetails(r) }} aria-label={`Report ${r.id} by ${r.reporter}`}>
+                        <td className="p-3 align-middle text-center">
+                          <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${
+                            r.status === "Pending" ? "bg-green-50 text-green-700 border border-green-200" :
+                            r.status === "Pending-Inaccurate" ? "bg-red-50 text-red-700 border border-red-200" :
+                            r.status === "Ongoing" ? "bg-yellow-50 text-yellow-700 border border-yellow-200" :
+                            "bg-blue-50 text-blue-700 border border-blue-200"
                           }`}>
-                            {entry.status === "Pending" && !entry.verified_flag && <AlertCircle className="h-3 w-3" />}
-                            {entry.status === "Ongoing" && <Clock className="h-3 w-3" />}
-                            {(entry.status === "Verified" || entry.status === "Completed") && <CheckCircle className="h-3 w-3" />}
-                            {entry.status}
+                            {r.status === "Pending" && <CheckCircle className="h-4 w-4 text-green-600" />}
+                            {r.status === "Pending-Inaccurate" && <XCircle className="h-4 w-4 text-red-600" />}
+                            <span className="whitespace-nowrap">{r.status === "Pending-Inaccurate" ? "Pending (Inaccurate)" : r.status}</span>
                           </span>
                         </td>
-                        <td className="p-2">
-                          <div className="flex gap-1">
-                            {entry.status === "Pending" && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-6 text-[10px] px-2"
-                                  onClick={() => handleStatusChange(entry.dispatch_id, "Ongoing")}
-                                >
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  Start
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  className="h-6 text-[10px] px-2"
-                                  onClick={() => handleReject(entry.dispatch_id)}
-                                >
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                  Reject
-                                </Button>
-                              </>
-                            )}
-                            {entry.status === "Ongoing" && (
-                              <Button
-                                size="sm"
-                                variant="default"
-                                className="h-6 text-[10px] px-2 bg-green-600 hover:bg-green-700"
-                                onClick={() => handleVerify(entry.dispatch_id)}
-                              >
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Verify
-                              </Button>
-                            )}
-                            {(entry.status === "Verified" || entry.status === "Completed") && (
-                              <span className="text-[10px] text-green-600 font-medium flex items-center gap-1">
-                                <CheckCircle className="h-3 w-3" />
-                                Done
-                              </span>
-                            )}
-                          </div>
+
+                        <td className="p-3 align-middle text-base">{r.reporter}</td>
+                        <td className="p-3 align-middle text-base">{r.hub}</td>
+                        <td className="p-3 align-middle text-base">{r.batch}</td>
+                        <td className="p-3 align-middle font-mono">{r.lh_trip}</td>
+                        <td className="p-3 align-middle font-mono">{r.plate}</td>
+                        <td className="p-3 align-middle">{r.date}</td>
+                        <td className="p-3 align-middle">{r.dataTeam}</td>
+                        <td className="p-3 align-middle">
+                          <Button size="sm" variant="ghost" aria-label={`Open details for ${r.id}`} onClick={() => openDetails(r)} onKeyDown={(e) => { if (e.key === 'Enter') openDetails(r) }}>
+                            <MoreHorizontal />
+                          </Button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+
+                {/* Pagination controls */}
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-muted-foreground">Showing {pageItems.length} of {filtered.length} entries</div>
+                  <div className="flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>Previous</Button>
+                    <div className="text-sm">Page {page} / {totalPages}</div>
+                    <Button size="sm" variant="outline" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}>Next</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Batch modal */}
+        {showBatchModal && selectedBatch && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="w-full max-w-3xl bg-background rounded shadow p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold">{selectedBatch.hub} — {selectedBatch.batch}</h3>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" onClick={closeBatch}>Close</Button>
+                </div>
               </div>
 
-              {/* Pagination */}
-              <div className="flex items-center justify-between pt-4 border-t">
-                <div className="text-sm text-muted-foreground">
-                  Page {page} of {totalPages}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(Math.max(1, page - 1))}
-                    disabled={page === 1}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(Math.min(totalPages, page + 1))}
-                    disabled={page === totalPages}
-                  >
-                    Next
-                  </Button>
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground">Reports in this batch</div>
+                <div className="overflow-y-auto max-h-72">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="p-2 text-left">Reporter</th>
+                        <th className="p-2 text-left">Hub</th>
+                        <th className="p-2 text-left">Batch</th>
+                        <th className="p-2 text-left">LHTrip</th>
+                        <th className="p-2 text-left">Plate</th>
+                        <th className="p-2 text-left">Date</th>
+                        <th className="p-2 text-left">Data Team</th>
+                        <th className="p-2 text-left">Status</th>
+                        <th className="p-2 text-left">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reports.filter(r => r.hub === selectedBatch.hub && r.batch === selectedBatch.batch).map(r => (
+                        <tr key={r.id} className="border-b hover:bg-muted/10">
+                          <td className="p-2">{r.reporter}</td>
+                          <td className="p-2">{r.hub}</td>
+                          <td className="p-2">{r.batch}</td>
+                          <td className="p-2">{r.lh_trip}</td>
+                          <td className="p-2">{r.plate}</td>
+                          <td className="p-2">{r.date}</td>
+                          <td className="p-2">{r.dataTeam}</td>
+                          <td className="p-2">{r.status}</td>
+                          <td className="p-2"><Button size="sm" variant="outline" onClick={() => openDetails(r)}>Details</Button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+
+        {/* Detail modal */}
+        {showDetailModal && detailReport && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="w-full max-w-2xl bg-background rounded shadow p-6">
+              <div className="flex items-start justify-between mb-4 gap-4">
+                <div>
+                  <h3 className="text-2xl font-semibold">Report Details</h3>
+                  <div className="text-sm text-muted-foreground">ID: {detailReport.id} • {detailReport.date}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" onClick={closeDetails}>Close</Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-base">
+                <div>
+                  <div className="text-sm text-muted-foreground">Reporter</div>
+                  <div className="font-medium">{detailReport.reporter}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Hub</div>
+                  <div className="font-medium">{detailReport.hub}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Batch</div>
+                  <div className="font-medium">{detailReport.batch}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Data Team</div>
+                  <div className="font-medium">{detailReport.dataTeam}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">LH Trip</div>
+                  <div className="font-mono">{detailReport.lh_trip}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Plate</div>
+                  <div className="font-mono">{detailReport.plate}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-sm text-muted-foreground">Notes</div>
+                  <div className="font-medium">{detailReport.notes}</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 mt-6">
+                <Button variant="destructive" onClick={() => { setStatusForReport(detailReport.id, "Pending-Inaccurate"); closeDetails() }}>Mark Inaccurate</Button>
+                <Button onClick={() => { setStatusForReport(detailReport.id, "Done"); closeDetails() }}>Mark Complete</Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
+
