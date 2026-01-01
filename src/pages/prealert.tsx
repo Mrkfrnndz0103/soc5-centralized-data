@@ -291,7 +291,7 @@ export function PrealertPage() {
         </div>
 
         <div className="my-6" aria-hidden>
-          <div className="h-0.5 bg-muted/60 w-full rounded shadow-sm" />
+          <div className="h-0.5 w-full rounded shadow-sm bg-gradient-to-r from-sky-400 to-indigo-600" />
         </div>
 
         {/* Filters */}
@@ -360,24 +360,24 @@ export function PrealertPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-base border-collapse">
+                <table className="w-full text-base border-collapse border border-muted/20">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="p-3 text-center">Status</th>
-                      <th className="p-3 text-center">Reporter</th>
-                      <th className="p-3 text-center">Hub</th>
-                      <th className="p-3 text-center">Batch #</th>
-                      <th className="p-3 text-center">LHTrip #</th>
-                      <th className="p-3 text-center">Plate #</th>
-                      <th className="p-3 text-center">Date</th>
-                      <th className="p-3 text-center">Data Team</th>
-                      <th className="p-3 text-center">Actions</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Status</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Reporter</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Hub</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Batch #</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">LHTrip #</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Plate #</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Date</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Data Team</th>
+                      <th className="p-3 text-center last:border-r-0">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pageItems.map((r) => (
                       <tr key={r.id} className="border-b hover:shadow-md hover:-translate-y-0.5 transition-all group" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') openDetails(r) }} aria-label={`Report ${r.id} by ${r.reporter}`}>
-                        <td className="p-3 align-middle text-center">
+                        <td className="p-3 align-middle text-center border-r border-muted/20 last:border-r-0">
                           <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${
                             r.status === "Pending" ? "bg-green-50 text-green-700 border border-green-200" :
                             r.status === "Pending-Inaccurate" ? "bg-red-50 text-red-700 border border-red-200" :
@@ -390,13 +390,13 @@ export function PrealertPage() {
                           </span>
                         </td>
 
-                        <td className="p-3 align-middle text-base">{r.reporter}</td>
-                        <td className="p-3 align-middle text-base">{r.hub}</td>
-                        <td className="p-3 align-middle text-base">{r.batch}</td>
-                        <td className="p-3 align-middle font-mono">{r.lh_trip}</td>
-                        <td className="p-3 align-middle font-mono">{r.plate}</td>
-                        <td className="p-3 align-middle">{r.date}</td>
-                        <td className="p-3 align-middle">{r.dataTeam}</td>
+                        <td className="p-3 align-middle text-base border-r border-muted/20 last:border-r-0">{r.reporter}</td>
+                        <td className="p-3 align-middle text-base border-r border-muted/20 last:border-r-0">{r.hub}</td>
+                        <td className="p-3 align-middle text-base border-r border-muted/20 last:border-r-0">{r.batch}</td>
+                        <td className="p-3 align-middle font-mono border-r border-muted/20 last:border-r-0">{r.lh_trip}</td>
+                        <td className="p-3 align-middle font-mono border-r border-muted/20 last:border-r-0">{r.plate}</td>
+                        <td className="p-3 align-middle border-r border-muted/20 last:border-r-0">{r.date}</td>
+                        <td className="p-3 align-middle border-r border-muted/20 last:border-r-0">{r.dataTeam}</td>
                         <td className="p-3 align-middle">
                           <Button size="sm" variant="ghost" aria-label={`Open details for ${r.id}`} onClick={() => openDetails(r)} onKeyDown={(e) => { if (e.key === 'Enter') openDetails(r) }}>
                             <MoreHorizontal />
