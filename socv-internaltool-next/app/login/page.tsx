@@ -302,12 +302,13 @@ export default function LoginPage() {
                 </div>  
                 <button  
                   onClick={() => setShowHelp(false)}  
-                  className="text-gray-400 hover:text-white"  
+                  className="text-gray-400 hover:text-white" 
+                  aria-label="Close help dialog" 
                 >  
-                  <X className="w-5 h-5" />  
-                </button>  
+                  <X className="w-5 h-5" aria-hidden="true" />  
+                </button> 
               </div>  
-  
+              
               <p className="text-sm text-gray-400 mb-4">  
                 Describe your issue and our Data Team will assist you shortly.  
               </p>  

@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-export function PrealertPage() {
-  return (
-    <div className="space-y-6" />
-=======
 import { useMemo, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -530,7 +525,5 @@ export function PrealertPage() {
         )}
       </div>
     </div>
->>>>>>> 1daeb6360956d665eb7fa3cdf3add3cdb6d8f319
   )
 }
-

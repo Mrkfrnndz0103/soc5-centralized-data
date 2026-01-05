@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react"
+import { themePresets, ThemePreset } from "@/theme/presets"
 
 type Theme = "dark" | "light" | "system"
 
@@ -6,16 +7,22 @@ type ThemeProviderProps = {
   children: React.ReactNode
   defaultTheme?: Theme
   storageKey?: string
+  defaultThemePreset?: ThemePreset
+  themePresetKey?: string
 }
 
 type ThemeProviderState = {
   theme: Theme
   setTheme: (theme: Theme) => void
+  themePreset: ThemePreset
+  setThemePreset: (preset: ThemePreset) => void
 }
 
 const initialState: ThemeProviderState = {
   theme: "system",
   setTheme: () => null,
+  themePreset: "default",
+  setThemePreset: () => null,
 }
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
@@ -24,16 +31,28 @@ export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "vite-ui-theme",
+  defaultThemePreset = "default",
+  themePresetKey = "vite-ui-theme-preset",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   )
 
+  const [themePreset, setThemePreset] = useState<ThemePreset>(
+    () => (localStorage.getItem(themePresetKey) as ThemePreset) || defaultThemePreset
+  )
+
   useEffect(() => {
     const root = window.document.documentElement
-    root.classList.remove("light", "dark")
 
+    // Remove all theme-related classes
+    root.classList.remove("light", "dark")
+    Object.keys(themePresets).forEach(preset => {
+      root.classList.remove(`theme-${preset}`)
+    })
+
+    // Apply the current theme
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
@@ -44,13 +63,30 @@ export function ThemeProvider({
       root.classList.add(theme)
       root.setAttribute("data-theme", theme)
     }
-  }, [theme])
+
+    // Apply the current theme preset
+    if (themePreset) {
+      root.classList.add(`theme-${themePreset}`)
+      // Apply preset-specific styles
+      const preset = themePresets[themePreset]
+      if (preset && preset.properties) {
+        Object.entries(preset.properties).forEach(([property, value]) => {
+          root.style.setProperty(property, value)
+        })
+      }
+    }
+  }, [theme, themePreset])
 
   const value = {
     theme,
     setTheme: (theme: Theme) => {
       localStorage.setItem(storageKey, theme)
       setTheme(theme)
+    },
+    themePreset,
+    setThemePreset: (preset: ThemePreset) => {
+      localStorage.setItem(themePresetKey, preset)
+      setThemePreset(preset)
     },
   }
 

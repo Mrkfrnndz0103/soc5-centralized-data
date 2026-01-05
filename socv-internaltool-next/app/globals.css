@@ -121,7 +121,8 @@
     transform-origin: 0 0;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: theme('fontFamily.display');
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      sans-serif;
     font-weight: 600;
     letter-spacing: -0.025em;
   }
@@ -250,6 +251,7 @@
   .modal-container {
     animation: modalSlowZoom 1.2s cubic-bezier(0.16, 1, 0.3, 1);
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+    -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
     border-radius: 32px;
     box-shadow: 
@@ -277,8 +279,8 @@
     background-size: 200% 100%;
     animation: borderRun 5s linear infinite;
     z-index: -1;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkitmask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     padding: 3px;
@@ -447,6 +449,7 @@
     background: linear-gradient(135deg, 
       rgba(100, 116, 139, 0.2) 0%,
       rgba(71, 85, 105, 0.25) 100%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
     backdrop-filter: blur(40px) saturate(180%);
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -883,6 +886,7 @@
 
   .glass-morphism {
     background: rgba(255, 255, 255, 0.1);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
   }

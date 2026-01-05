@@ -1,6 +1,7 @@
 import type React from "react"
 import { useState, useCallback, memo } from "react"
-import { Link, useLocation } from "react-router-dom"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { ChevronRight, LayoutDashboard, Package, TrendingUp, Truck, Bell, HelpCircle, Settings, Eye, FileText, AlertCircle, Grid3x3, Users, Calendar, Clock, Briefcase, BarChart3, Zap, MapPin, Database, Upload, CheckCircle, AlertTriangle, Anchor, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -101,7 +102,7 @@ interface NavItemProps {
 const NavItem = memo(function NavItem({ item, isCollapsed, level = 0 }: NavItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
-  const location = useLocation()
+  const pathname = usePathname()
   const hasSubItems = item.subItems && item.subItems.length > 0
   const isActive = location.pathname === item.path
   const isParentActive = location.pathname.startsWith(item.path + "/")
@@ -133,7 +134,7 @@ const NavItem = memo(function NavItem({ item, isCollapsed, level = 0 }: NavItemP
       onMouseLeave={handleMouseLeave}
     >
       <Link
-        to={!hasSubItems ? item.path : "#"}
+        href={!hasSubItems ? item.path : "#"}
         onClick={(e) => hasSubItems && e.preventDefault()}
         className={cn(
           "relative flex h-9 items-center gap-2.5 overflow-hidden rounded-lg py-2 pr-3 text-sm transition-all duration-200 group",
@@ -240,23 +241,21 @@ export function Sidebar({ isCollapsed, onToggle: _onToggle, activePopup, onPopup
         {bottomMenuItems.map((item) => (
           <Button
             key={item.id}
-            variant="ghost"
+            variant="outline"
             onClick={() => onPopupChange?.(activePopup === item.id ? null : item.id)}
             className={cn(
               "w-full justify-start gap-3 h-10 rounded-lg transition-all duration-200 relative group",
               isCollapsed && "justify-center px-2",
               activePopup === item.id 
                 ? `bg-gradient-to-r ${item.gradient} text-white shadow-lg`
-                : "text-[hsl(var(--sidebar-foreground))] hover:bg-white/10"
+                : "text-[hsl(var(--sidebar-foreground))] hover:bg-white/10 hover:text-white"
             )}
           >
             <span className="relative">
               {item.icon}
-              {item.badge > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+              {item.badge > 0 &&<><span className="absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
                   {item.badge > 99 ? "99+" : item.badge}
-                </span>
-              )}
+                </span></>
             </span>
             {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
           </Button>
