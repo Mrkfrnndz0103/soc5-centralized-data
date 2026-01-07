@@ -1,14 +1,25 @@
+
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect, useRef, useCallback } from "react"
+import { usePathname } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
-import { Search, Download, MoreHorizontal, Folder, CheckCircle, XCircle, Tag, Clock, Monitor } from "lucide-react"
+import { Search, Download, MoreHorizontal, Folder, CheckCircle, Tag, Clock, UserCheck, AlertTriangle } from "lucide-react"
 
-type Status = "Pending" | "Pending-Inaccurate" | "Ongoing" | "Done"
+type Status = "Pending" | "Acknowledged" | "Pending_Edit" | "Confirmed"
+
+type EditEntry = {
+  id: string
+  remarks: string
+  reason: string
+  editor: string
+  timestamp: string
+}
 
 type Report = {
   id: string
@@ -20,9 +31,23 @@ type Report = {
   plate?: string
   date: string
   dataTeam?: string
+  dataTeamOpsId?: string
   submittedBy?: string
+  submittedByOpsId?: string
   notes?: string
+  createdAt: string
+  statusUpdatedAt: string
+  ackBy?: string
+  ackAt?: string
+  confirmedBy?: string
+  confirmedAt?: string
+  pendingEditReason?: string
+  editCount?: number
+  editHistory?: EditEntry[]
 }
+
+const STORAGE_KEY = "soc5_dispatch_reports"
+const AUTO_ASSIGN_MS = 5 * 60 * 1000
 
 const HUBS = [
   { name: "Angongo Hub", batches: ["Batch 1", "Batch 2"] },
@@ -30,8 +55,24 @@ const HUBS = [
   { name: "Sto Tomas Hub", batches: ["Batch 1", "Batch 2", "Batch 3"] },
 ]
 
+function formatDateTime(value?: string) {
+  if (!value) return "-"
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return value
+  return parsed.toLocaleString()
+}
+
+function escapeCsv(value?: string) {
+  if (!value) return ""
+  const text = String(value)
+  if (text.includes(",") || text.includes("\"") || text.includes("\n")) {
+    return `"${text.replace(/\"/g, "\"\"")}"`
+  }
+  return text
+}
+
 function generateSampleReports(count = 50): Report[] {
-  const statuses: Status[] = ["Pending", "Pending-Inaccurate", "Ongoing", "Done"]
+  const statuses: Status[] = ["Pending", "Acknowledged", "Pending_Edit", "Confirmed"]
   const reporters = ["OpsCoor1", "PIC2", "OpsCoor3", "PIC4", "User5", "User6"]
   const dataTeams = ["Team A", "Team B", "Team C"]
   const hubs = HUBS.map((h) => h.name)
@@ -42,10 +83,20 @@ function generateSampleReports(count = 50): Report[] {
     const batch = batches[i % batches.length]
     const status = statuses[i % statuses.length]
     const reporter = reporters[i % reporters.length]
-    const dataTeam = dataTeams[i % dataTeams.length]
+    const dataTeam = status === "Pending" ? undefined : dataTeams[i % dataTeams.length]
     const lh_trip = `LH${100 + i}`
     const plate = `PLT-${(100 + i).toString().slice(-3)}`
     const date = `2026-01-${String((i % 28) + 1).padStart(2, "0")}`
+    const createdAt = new Date(Date.now() - (i + 1) * 2 * 60 * 1000).toISOString()
+    const statusUpdatedAt = createdAt
+    const pendingEditReason = status === "Pending_Edit" ? "LH trip mismatch" : undefined
+    const editHistory = status === "Pending_Edit" ? [{
+      id: `edit-${i}`,
+      remarks: "Updated remarks after review.",
+      reason: pendingEditReason || "",
+      editor: reporter,
+      timestamp: createdAt,
+    }] : []
 
     return {
       id: `r${i + 1}`,
@@ -59,8 +110,35 @@ function generateSampleReports(count = 50): Report[] {
       dataTeam,
       submittedBy: reporter,
       notes: `Sample note for report ${i + 1}`,
+      createdAt,
+      statusUpdatedAt,
+      ackBy: status === "Pending" ? undefined : dataTeam,
+      ackAt: status === "Pending" ? undefined : createdAt,
+      confirmedBy: status === "Confirmed" ? dataTeam : undefined,
+      confirmedAt: status === "Confirmed" ? createdAt : undefined,
+      pendingEditReason,
+      editCount: editHistory.length,
+      editHistory,
     }
   })
+}
+
+function loadReports(): Report[] {
+  if (typeof window === "undefined") return generateSampleReports(30)
+  const raw = window.localStorage.getItem(STORAGE_KEY)
+  if (!raw) return generateSampleReports(30)
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed as Report[]
+  } catch {
+    return generateSampleReports(30)
+  }
+  return generateSampleReports(30)
+}
+
+function saveReports(reports: Report[]) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(reports))
 }
 
 export function PrealertPage() {
@@ -71,54 +149,170 @@ export function PrealertPage() {
   const [dateFilter, setDateFilter] = useState<string>(today)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [reports, setReports] = useState<Report[]>(() => generateSampleReports(50))
+  const [reports, setReports] = useState<Report[]>(() => loadReports())
   const [selectedBatch, setSelectedBatch] = useState<{ hub: string; batch: string } | null>(null)
   const [showBatchModal, setShowBatchModal] = useState(false)
   const [detailReport, setDetailReport] = useState<Report | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [editReason, setEditReason] = useState("")
+  const [editRemarks, setEditRemarks] = useState("")
+
+  const alarmIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const previousStatusRef = useRef<Record<string, Status>>({})
 
   const { toast } = useToast()
+  const { user } = useAuth()
+  const pathname = usePathname()
+  const isDataTeamView = pathname?.startsWith("/data-team") || user?.role === "Data Team" || user?.role === "Admin"
+
+  useEffect(() => {
+    saveReports(reports)
+  }, [reports])
+
+  const isReportForUser = useCallback((report: Report) => {
+    if (!user) return false
+    if (report.submittedByOpsId && user.ops_id) {
+      return report.submittedByOpsId === user.ops_id
+    }
+    return report.submittedBy === user.name || report.reporter === user.name
+  }, [user])
+
+  const alarmActive = useMemo(() => {
+    if (isDataTeamView) {
+      return reports.some((report) => report.status === "Pending")
+    }
+    return reports.some((report) => report.status === "Pending_Edit" && isReportForUser(report))
+  }, [reports, isDataTeamView, isReportForUser])
+
+  useEffect(() => {
+    if (!alarmActive) {
+      if (alarmIntervalRef.current) {
+        clearInterval(alarmIntervalRef.current)
+        alarmIntervalRef.current = null
+      }
+      return
+    }
+
+    const playBeep = () => {
+      if (typeof window === "undefined") return
+      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!AudioContextClass) return
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContextClass()
+      }
+      const context = audioContextRef.current
+      if (context.state === "suspended") {
+        context.resume().catch(() => {})
+      }
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      oscillator.type = "sine"
+      oscillator.frequency.value = 880
+      gain.gain.value = 0.08
+      oscillator.connect(gain)
+      gain.connect(context.destination)
+      oscillator.start()
+      oscillator.stop(context.currentTime + 0.2)
+    }
+
+    playBeep()
+    if (!alarmIntervalRef.current) {
+      alarmIntervalRef.current = setInterval(playBeep, 1500)
+    }
+
+    return () => {
+      if (alarmIntervalRef.current) {
+        clearInterval(alarmIntervalRef.current)
+        alarmIntervalRef.current = null
+      }
+    }
+  }, [alarmActive])
+
+  useEffect(() => {
+    if (!user || !isDataTeamView) return
+
+    const assign = () => {
+      setReports((prev) => {
+        let changed = false
+        const now = Date.now()
+        const next = prev.map((report) => {
+          if (report.status !== "Pending" || report.dataTeam) return report
+          const pendingSince = new Date(report.statusUpdatedAt || report.createdAt).getTime()
+          if (Number.isNaN(pendingSince)) return report
+          if (now - pendingSince < AUTO_ASSIGN_MS) return report
+          changed = true
+          return {
+            ...report,
+            dataTeam: user.name,
+            dataTeamOpsId: user.ops_id,
+          }
+        })
+        return changed ? next : prev
+      })
+    }
+
+    assign()
+    const timer = setInterval(assign, 30000)
+    return () => clearInterval(timer)
+  }, [user, isDataTeamView])
+
+  useEffect(() => {
+    const previous = previousStatusRef.current
+    const next: Record<string, Status> = {}
+    reports.forEach((report) => {
+      next[report.id] = report.status
+    })
+    if (!isDataTeamView && user) {
+      reports.forEach((report) => {
+        if (!isReportForUser(report)) return
+        const prevStatus = previous[report.id]
+        if (prevStatus && prevStatus !== report.status && report.status === "Acknowledged" && report.ackBy) {
+          toast({
+            title: "Report acknowledged",
+            description: `${report.id} acknowledged by ${report.ackBy}`,
+          })
+        }
+      })
+    }
+    previousStatusRef.current = next
+  }, [reports, isDataTeamView, isReportForUser, toast, user])
 
   const countsByHub = useMemo(() => {
     const map: Record<string, number> = {}
-    reports.forEach((r) => (map[r.hub] = (map[r.hub] || 0) + 1))
+    reports.forEach((report) => (map[report.hub] = (map[report.hub] || 0) + 1))
     return map
   }, [reports])
 
-  // Reports filtered by the selected date only (used by the scorecards)
   const dateFilteredReports = useMemo(() => {
     if (!dateFilter) return reports
-    return reports.filter((r) => r.date === dateFilter)
+    return reports.filter((report) => report.date === dateFilter)
   }, [reports, dateFilter])
 
-  const pendingCount = dateFilteredReports.filter((r) => r.status === "Pending" || r.status === "Pending-Inaccurate").length
-  const ongoingCount = dateFilteredReports.filter((r) => r.status === "Ongoing").length
-  const doneCount = dateFilteredReports.filter((r) => r.status === "Done").length
+  const pendingCount = dateFilteredReports.filter((report) => report.status === "Pending").length
+  const acknowledgedCount = dateFilteredReports.filter((report) => report.status === "Acknowledged").length
+  const confirmedCount = dateFilteredReports.filter((report) => report.status === "Confirmed").length
 
   const filtered = useMemo(() => {
-    return reports.filter((r) => {
-      if (hubFilter && r.hub !== hubFilter) return false
+    return reports.filter((report) => {
+      if (hubFilter && report.hub !== hubFilter) return false
       if (statusFilter !== "all") {
-        if (statusFilter === "Pending") {
-          if (!(r.status === "Pending" || r.status === "Pending-Inaccurate")) return false
-        } else {
-          if (statusFilter === "Pending-Green" && r.status !== "Pending") return false
-          if (statusFilter === "Pending-Red" && r.status !== "Pending-Inaccurate") return false
-          if (statusFilter === "Ongoing" && r.status !== "Ongoing") return false
-          if (statusFilter === "Done" && r.status !== "Done") return false
-        }
+        if (statusFilter === "Pending" && report.status !== "Pending") return false
+        if (statusFilter === "Acknowledged" && report.status !== "Acknowledged") return false
+        if (statusFilter === "Pending_Edit" && report.status !== "Pending_Edit") return false
+        if (statusFilter === "Confirmed" && report.status !== "Confirmed") return false
       }
-      if (dateFilter && r.date !== dateFilter) return false
+      if (dateFilter && report.date !== dateFilter) return false
       if (query) {
         const q = query.toLowerCase()
         if (
           !(
-            r.reporter.toLowerCase().includes(q) ||
-            r.hub.toLowerCase().includes(q) ||
-            r.batch.toLowerCase().includes(q) ||
-            (r.lh_trip || "").toLowerCase().includes(q) ||
-            (r.plate || "").toLowerCase().includes(q)
+            report.reporter.toLowerCase().includes(q) ||
+            report.hub.toLowerCase().includes(q) ||
+            report.batch.toLowerCase().includes(q) ||
+            (report.lh_trip || "").toLowerCase().includes(q) ||
+            (report.plate || "").toLowerCase().includes(q)
           )
         )
           return false
@@ -128,28 +322,26 @@ export function PrealertPage() {
   }, [reports, hubFilter, statusFilter, dateFilter, query])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
-
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  const setStatusForReport = (id: string, newStatus: Status) => {
-    setReports((prev) => prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r)))
-    toast({ title: "Status updated", description: `Report ${id} set to ${newStatus}` })
-  }
-
-  const toggleStatusFilter = (key: 'Pending' | 'Ongoing' | 'Done') => {
-    if (key === 'Pending') {
-      if (statusFilter === 'Pending') setStatusFilter('all')
-      else setStatusFilter('Pending')
-    } else {
-      if (statusFilter === key) setStatusFilter('all')
-      else setStatusFilter(key)
+  const getStatusBadge = (status: Status) => {
+    switch (status) {
+      case "Pending":
+        return { label: "Pending", icon: <Clock className="h-4 w-4 text-yellow-600" />, className: "bg-yellow-50 text-yellow-700 border border-yellow-200" }
+      case "Acknowledged":
+        return { label: "Acknowledged", icon: <UserCheck className="h-4 w-4 text-blue-600" />, className: "bg-blue-50 text-blue-700 border border-blue-200" }
+      case "Pending_Edit":
+        return { label: "Pending Edit", icon: <AlertTriangle className="h-4 w-4 text-red-600" />, className: "bg-red-50 text-red-700 border border-red-200" }
+      case "Confirmed":
+        return { label: "Confirmed", icon: <CheckCircle className="h-4 w-4 text-green-600" />, className: "bg-green-50 text-green-700 border border-green-200" }
+      default:
+        return { label: status, icon: null, className: "bg-muted text-muted-foreground" }
     }
-    setPage(1)
   }
 
-  const isPendingActive = statusFilter === 'Pending' || statusFilter === 'Pending-Green' || statusFilter === 'Pending-Red'
-  const isOngoingActive = statusFilter === 'Ongoing'
-  const isDoneActive = statusFilter === 'Done'
+  const isPendingActive = statusFilter === "Pending"
+  const isAcknowledgedActive = statusFilter === "Acknowledged"
+  const isConfirmedActive = statusFilter === "Confirmed"
 
   const openBatch = (hub: string, batch: string) => {
     setSelectedBatch({ hub, batch })
@@ -161,14 +353,151 @@ export function PrealertPage() {
     setShowBatchModal(false)
   }
 
-  const openDetails = (r: Report) => {
-    setDetailReport(r)
+  const openDetails = (report: Report) => {
+    setDetailReport(report)
+    setEditReason(report.pendingEditReason || "")
+    setEditRemarks("")
     setShowDetailModal(true)
   }
 
   const closeDetails = () => {
     setDetailReport(null)
     setShowDetailModal(false)
+    setEditReason("")
+    setEditRemarks("")
+  }
+
+  const updateReport = (id: string, updater: (report: Report) => Report) => {
+    setReports((prev) => {
+      let changed = false
+      const next = prev.map((report) => {
+        if (report.id !== id) return report
+        const updated = updater(report)
+        if (updated !== report) changed = true
+        return updated
+      })
+      return changed ? next : prev
+    })
+  }
+
+  const handleTakeOwnership = (report: Report) => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Login required", description: "Please log in first." })
+      return
+    }
+    updateReport(report.id, (current) => {
+      if (current.dataTeam) return current
+      return { ...current, dataTeam: user.name, dataTeamOpsId: user.ops_id }
+    })
+    toast({ title: "Ownership assigned", description: `Assigned to ${user.name}` })
+  }
+
+  const handleAcknowledge = (report: Report) => {
+    if (!user) return
+    const now = new Date().toISOString()
+    updateReport(report.id, (current) => {
+      if (current.status !== "Pending") return current
+      return {
+        ...current,
+        status: "Acknowledged",
+        ackBy: user.name,
+        ackAt: now,
+        dataTeam: current.dataTeam || user.name,
+        dataTeamOpsId: current.dataTeamOpsId || user.ops_id,
+        statusUpdatedAt: now,
+      }
+    })
+    toast({ title: "Acknowledged", description: `${report.id} acknowledged by ${user.name}` })
+  }
+
+  const handlePendingEdit = (report: Report) => {
+    if (!user) return
+    if (!editReason.trim()) {
+      toast({ variant: "destructive", title: "Reason required", description: "Add a reason before sending Pending Edit." })
+      return
+    }
+    const now = new Date().toISOString()
+    updateReport(report.id, (current) => ({
+      ...current,
+      status: "Pending_Edit",
+      pendingEditReason: editReason.trim(),
+      ackBy: current.ackBy || user.name,
+      ackAt: current.ackAt || now,
+      dataTeam: current.dataTeam || user.name,
+      dataTeamOpsId: current.dataTeamOpsId || user.ops_id,
+      statusUpdatedAt: now,
+    }))
+    toast({ title: "Pending Edit sent", description: `${report.id} returned to Ops PIC.` })
+  }
+
+  const handleConfirm = (report: Report) => {
+    if (!user) return
+    const now = new Date().toISOString()
+    let confirmed: Report | null = null
+    updateReport(report.id, (current) => {
+      confirmed = {
+        ...current,
+        status: "Confirmed",
+        confirmedBy: user.name,
+        confirmedAt: now,
+        dataTeam: current.dataTeam || user.name,
+        dataTeamOpsId: current.dataTeamOpsId || user.ops_id,
+        statusUpdatedAt: now,
+      }
+      return confirmed
+    })
+    if (confirmed) {
+      const headers = ["dispatch_id", "lh_trip", "hub", "batch", "plate", "status", "confirmed_by", "confirmed_at"]
+      const row = [
+        confirmed.id,
+        confirmed.lh_trip || "",
+        confirmed.hub,
+        confirmed.batch,
+        confirmed.plate || "",
+        confirmed.status,
+        confirmed.confirmedBy || "",
+        confirmed.confirmedAt || "",
+      ]
+      const csv = `${headers.join(",")}\n${row.map(escapeCsv).join(",")}`
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `dispatch-${confirmed.id}.csv`
+      link.click()
+      window.URL.revokeObjectURL(url)
+      toast({ title: "Confirmed", description: "CSV downloaded. Seatalk and email dispatch queued." })
+    }
+  }
+
+  const handleResubmit = (report: Report) => {
+    if (!user) return
+    if (!editRemarks.trim()) {
+      toast({ variant: "destructive", title: "Remarks required", description: "Add remarks before resubmitting." })
+      return
+    }
+    const now = new Date().toISOString()
+    updateReport(report.id, (current) => {
+      const entry: EditEntry = {
+        id: `${current.id}-${Date.now()}`,
+        remarks: editRemarks.trim(),
+        reason: current.pendingEditReason || "",
+        editor: user.name,
+        timestamp: now,
+      }
+      const history = current.editHistory ? [...current.editHistory, entry] : [entry]
+      return {
+        ...current,
+        status: "Pending",
+        pendingEditReason: undefined,
+        editCount: (current.editCount || 0) + 1,
+        editHistory: history,
+        notes: editRemarks.trim(),
+        statusUpdatedAt: now,
+      }
+    })
+    toast({ title: "Resubmitted", description: `${report.id} returned to Data Team queue.` })
+    setEditRemarks("")
   }
 
   const handleExport = () => {
@@ -177,7 +506,6 @@ export function PrealertPage() {
 
   return (
     <div className="flex gap-6">
-      {/* Sidebar */}
       <aside className="w-72">
         <Card className="sticky top-6">
           <CardHeader>
@@ -186,37 +514,49 @@ export function PrealertPage() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-3 relative max-h-[60vh] overflow-y-auto pr-2">
-              {HUBS.map((h) => (
-                <li key={h.name} className="relative">
+              {HUBS.map((hub) => (
+                <li key={hub.name} className="relative">
                   <div className="flex items-center justify-between gap-2">
                     <button
-                      aria-expanded={!!hubFilter && hubFilter === h.name}
-                      aria-controls={`batches-${h.name}`}
-                      onClick={() => { const sel = hubFilter === h.name ? "" : h.name; setHubFilter(sel); setExpanded((s) => ({ ...s, [h.name]: !s[h.name] })); setPage(1); }}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); const sel = hubFilter === h.name ? "" : h.name; setHubFilter(sel); setExpanded((s) => ({ ...s, [h.name]: !s[h.name] })); setPage(1); } }}
-                      className={`flex items-center gap-3 px-3 py-3 rounded w-full text-left ${hubFilter === h.name ? "bg-muted/20" : "hover:bg-muted/10"}`}
+                      aria-expanded={!!hubFilter && hubFilter === hub.name}
+                      aria-controls={`batches-${hub.name}`}
+                      onClick={() => {
+                        const sel = hubFilter === hub.name ? "" : hub.name
+                        setHubFilter(sel)
+                        setExpanded((s) => ({ ...s, [hub.name]: !s[hub.name] }))
+                        setPage(1)
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault()
+                          const sel = hubFilter === hub.name ? "" : hub.name
+                          setHubFilter(sel)
+                          setExpanded((s) => ({ ...s, [hub.name]: !s[hub.name] }))
+                          setPage(1)
+                        }
+                      }}
+                      className={`flex items-center gap-3 px-3 py-3 rounded w-full text-left ${hubFilter === hub.name ? "bg-muted/20" : "hover:bg-muted/10"}`}
                     >
                       <Folder className="h-5 w-5 text-gradient" />
                       <div>
-                        <div className="text-sm font-medium">{h.name}</div>
-                        <div className="text-xs text-muted-foreground">{countsByHub[h.name] || 0} reports</div>
+                        <div className="text-sm font-medium">{hub.name}</div>
+                        <div className="text-xs text-muted-foreground">{countsByHub[hub.name] || 0} reports</div>
                       </div>
                     </button>
                   </div>
 
-                  {/* connector line */}
                   <div className="absolute left-6 top-12 bottom-0 w-px bg-muted/20 ml-1" aria-hidden />
 
-                  <ul id={`batches-${h.name}`} className={`ml-9 mt-2 text-base text-muted-foreground space-y-2 ${expanded[h.name] ? 'block' : 'hidden'}`}>
-                    {h.batches.map((b) => (
-                      <li key={b}>
+                  <ul id={`batches-${hub.name}`} className={`ml-9 mt-2 text-base text-muted-foreground space-y-2 ${expanded[hub.name] ? "block" : "hidden"}`}>
+                    {hub.batches.map((batch) => (
+                      <li key={batch}>
                         <button
                           className="flex items-center gap-2 py-2 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded"
-                          onClick={() => openBatch(h.name, b)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') openBatch(h.name, b) }}
+                          onClick={() => openBatch(hub.name, batch)}
+                          onKeyDown={(event) => { if (event.key === "Enter") openBatch(hub.name, batch) }}
                         >
                           <Tag className="h-4 w-4 text-blue-500 mr-1" aria-hidden />
-                          <span>{b}</span>
+                          <span>{batch}</span>
                         </button>
                       </li>
                     ))}
@@ -228,9 +568,7 @@ export function PrealertPage() {
         </Card>
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 space-y-4">
-          {/* Scorecards - status overview (date-aware, clickable) */}
         <div className="flex items-center justify-between">
           <div className="flex-1 grid grid-cols-3 gap-4">
             <div
@@ -238,11 +576,11 @@ export function PrealertPage() {
               tabIndex={0}
               aria-label="Pending reports"
               aria-pressed={isPendingActive}
-              onClick={() => toggleStatusFilter('Pending')}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleStatusFilter('Pending') } }}
-              className={`cursor-pointer bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 transform transition-all duration-150 border-r border-muted/20 pr-6 ${isPendingActive ? 'ring-2 ring-yellow-300 scale-105' : 'hover:scale-105'}`}
+              onClick={() => { setStatusFilter(isPendingActive ? "all" : "Pending"); setPage(1) }}
+              onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setStatusFilter(isPendingActive ? "all" : "Pending"); setPage(1) } }}
+              className={`cursor-pointer bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 transform transition-all duration-150 border-r border-muted/20 pr-6 ${isPendingActive ? "ring-2 ring-yellow-300 scale-105" : "hover:scale-105"}`}
             >
-              <div className={`${isPendingActive ? 'inline-flex items-center justify-center h-16 w-16 rounded-full bg-yellow-600 text-white' : 'inline-flex items-center justify-center h-16 w-16 rounded-full bg-yellow-50 text-yellow-700'}`}>
+              <div className={`${isPendingActive ? "inline-flex items-center justify-center h-16 w-16 rounded-full bg-yellow-600 text-white" : "inline-flex items-center justify-center h-16 w-16 rounded-full bg-yellow-50 text-yellow-700"}`}>
                 <Clock className="h-8 w-8" aria-hidden />
               </div>
               <div>
@@ -255,18 +593,18 @@ export function PrealertPage() {
             <div
               role="button"
               tabIndex={0}
-              aria-label="Ongoing reports"
-              aria-pressed={isOngoingActive}
-              onClick={() => toggleStatusFilter('Ongoing')}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleStatusFilter('Ongoing') } }}
-              className={`cursor-pointer bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 transform transition-all duration-150 border-r border-muted/20 pr-6 ${isOngoingActive ? 'ring-2 ring-blue-300 scale-105' : 'hover:scale-105'}`}
+              aria-label="Acknowledged reports"
+              aria-pressed={isAcknowledgedActive}
+              onClick={() => { setStatusFilter(isAcknowledgedActive ? "all" : "Acknowledged"); setPage(1) }}
+              onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setStatusFilter(isAcknowledgedActive ? "all" : "Acknowledged"); setPage(1) } }}
+              className={`cursor-pointer bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 transform transition-all duration-150 border-r border-muted/20 pr-6 ${isAcknowledgedActive ? "ring-2 ring-blue-300 scale-105" : "hover:scale-105"}`}
             >
-              <div className={`${isOngoingActive ? 'inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-600 text-white' : 'inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-50 text-blue-700'}`}>
-                <Monitor className="h-8 w-8" aria-hidden />
+              <div className={`${isAcknowledgedActive ? "inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-600 text-white" : "inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-50 text-blue-700"}`}>
+                <UserCheck className="h-8 w-8" aria-hidden />
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Ongoing</div>
-                <div className="text-3xl font-extrabold">{ongoingCount}</div>
+                <div className="text-sm text-muted-foreground">Acknowledged</div>
+                <div className="text-3xl font-extrabold">{acknowledgedCount}</div>
                 <div className="text-xs text-muted-foreground mt-1">{dateFilter}</div>
               </div>
             </div>
@@ -274,18 +612,18 @@ export function PrealertPage() {
             <div
               role="button"
               tabIndex={0}
-              aria-label="Done reports"
-              aria-pressed={isDoneActive}
-              onClick={() => toggleStatusFilter('Done')}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleStatusFilter('Done') } }}
-              className={`cursor-pointer bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 transform transition-all duration-150 ${isDoneActive ? 'ring-2 ring-green-300 scale-105' : 'hover:scale-105'}`}
+              aria-label="Confirmed reports"
+              aria-pressed={isConfirmedActive}
+              onClick={() => { setStatusFilter(isConfirmedActive ? "all" : "Confirmed"); setPage(1) }}
+              onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setStatusFilter(isConfirmedActive ? "all" : "Confirmed"); setPage(1) } }}
+              className={`cursor-pointer bg-white rounded-xl shadow-sm p-4 flex items-center gap-4 transform transition-all duration-150 ${isConfirmedActive ? "ring-2 ring-green-300 scale-105" : "hover:scale-105"}`}
             >
-              <div className={`${isDoneActive ? 'inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-600 text-white' : 'inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-50 text-green-700'}`}>
+              <div className={`${isConfirmedActive ? "inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-600 text-white" : "inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-50 text-green-700"}`}>
                 <CheckCircle className="h-8 w-8" aria-hidden />
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Done</div>
-                <div className="text-3xl font-extrabold">{doneCount}</div>
+                <div className="text-sm text-muted-foreground">Confirmed</div>
+                <div className="text-3xl font-extrabold">{confirmedCount}</div>
                 <div className="text-xs text-muted-foreground mt-1">{dateFilter}</div>
               </div>
             </div>
@@ -296,7 +634,6 @@ export function PrealertPage() {
           <div className="h-0.5 w-full rounded shadow-sm bg-gradient-to-r from-sky-400 to-indigo-600" />
         </div>
 
-        {/* Filters */}
         <div className="flex items-center justify-between">
           <div className="flex gap-4 items-center">
             <div className="relative">
@@ -305,27 +642,26 @@ export function PrealertPage() {
                 placeholder="Search reporter, hub, LHTrip, plate..."
                 className="pl-11 w-96 text-base"
                 value={query}
-                onChange={(e) => { setQuery(e.target.value); setPage(1) }}
+                onChange={(event) => { setQuery(event.target.value); setPage(1) }}
                 aria-label="Search reports"
               />
             </div>
 
             <div className="flex items-center gap-2">
-              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1) }}>
+              <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1) }}>
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="Pending">Pending (All)</SelectItem>
-                  <SelectItem value="Pending-Green">Pending (New)</SelectItem>
-                  <SelectItem value="Pending-Red">Pending (Inaccurate)</SelectItem>
-                  <SelectItem value="Ongoing">Ongoing</SelectItem>
-                  <SelectItem value="Done">Done</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Acknowledged">Acknowledged</SelectItem>
+                  <SelectItem value="Pending_Edit">Pending Edit</SelectItem>
+                  <SelectItem value="Confirmed">Confirmed</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Input type="date" value={dateFilter} onChange={(e) => { setDateFilter(e.target.value); setPage(1) }} aria-label="Date" />
+              <Input type="date" value={dateFilter} onChange={(event) => { setDateFilter(event.target.value); setPage(1) }} aria-label="Date" />
 
               <Button variant="outline" onClick={() => { setQuery(""); setHubFilter(""); setStatusFilter("all"); setDateFilter(""); setPage(1) }}>Reset</Button>
             </div>
@@ -334,7 +670,7 @@ export function PrealertPage() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <label className="text-sm">Rows</label>
-              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1) }}>
+              <Select value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setPage(1) }}>
                 <SelectTrigger>
                   <SelectValue placeholder="10" />
                 </SelectTrigger>
@@ -353,7 +689,7 @@ export function PrealertPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Dispatch Entries</CardTitle>
-            <CardDescription className="text-sm">Showing {filtered.length} entries — page {page} / {totalPages}</CardDescription>
+            <CardDescription className="text-sm">Showing {filtered.length} entries, page {page} / {totalPages}</CardDescription>
           </CardHeader>
           <CardContent>
             {filtered.length === 0 ? (
@@ -368,48 +704,54 @@ export function PrealertPage() {
                       <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Status</th>
                       <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Reporter</th>
                       <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Hub</th>
-                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Batch #</th>
-                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">LHTrip #</th>
-                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Plate #</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Batch</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">LHTrip</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Plate</th>
                       <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Date</th>
-                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Data Team</th>
+                      <th className="p-3 text-center border-r border-muted/20 last:border-r-0">Owner</th>
                       <th className="p-3 text-center last:border-r-0">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {pageItems.map((r) => (
-                      <tr key={r.id} className="border-b hover:shadow-md hover:-translate-y-0.5 transition-all group" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') openDetails(r) }} aria-label={`Report ${r.id} by ${r.reporter}`}>
-                        <td className="p-3 align-middle text-center border-r border-muted/20 last:border-r-0">
-                          <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${
-                            r.status === "Pending" ? "bg-green-50 text-green-700 border border-green-200" :
-                            r.status === "Pending-Inaccurate" ? "bg-red-50 text-red-700 border border-red-200" :
-                            r.status === "Ongoing" ? "bg-yellow-50 text-yellow-700 border border-yellow-200" :
-                            "bg-blue-50 text-blue-700 border border-blue-200"
-                          }`}>
-                            {r.status === "Pending" && <CheckCircle className="h-4 w-4 text-green-600" />}
-                            {r.status === "Pending-Inaccurate" && <XCircle className="h-4 w-4 text-red-600" />}
-                            <span className="whitespace-nowrap">{r.status === "Pending-Inaccurate" ? "Pending (Inaccurate)" : r.status}</span>
-                          </span>
-                        </td>
+                    {pageItems.map((report) => {
+                      const badge = getStatusBadge(report.status)
+                      const shouldBlink = isDataTeamView
+                        ? report.status === "Pending"
+                        : report.status === "Pending_Edit" && isReportForUser(report)
 
-                        <td className="p-3 align-middle text-base border-r border-muted/20 last:border-r-0">{r.reporter}</td>
-                        <td className="p-3 align-middle text-base border-r border-muted/20 last:border-r-0">{r.hub}</td>
-                        <td className="p-3 align-middle text-base border-r border-muted/20 last:border-r-0">{r.batch}</td>
-                        <td className="p-3 align-middle font-mono border-r border-muted/20 last:border-r-0">{r.lh_trip}</td>
-                        <td className="p-3 align-middle font-mono border-r border-muted/20 last:border-r-0">{r.plate}</td>
-                        <td className="p-3 align-middle border-r border-muted/20 last:border-r-0">{r.date}</td>
-                        <td className="p-3 align-middle border-r border-muted/20 last:border-r-0">{r.dataTeam}</td>
-                        <td className="p-3 align-middle">
-                          <Button size="sm" variant="ghost" aria-label={`Open details for ${r.id}`} onClick={() => openDetails(r)} onKeyDown={(e) => { if (e.key === 'Enter') openDetails(r) }}>
-                            <MoreHorizontal />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                      return (
+                        <tr
+                          key={report.id}
+                          className={`border-b hover:shadow-md hover:-translate-y-0.5 transition-all group ${shouldBlink ? "blink-red ring-1 ring-red-300" : ""}`}
+                          tabIndex={0}
+                          onKeyDown={(event) => { if (event.key === "Enter") openDetails(report) }}
+                          aria-label={`Report ${report.id} by ${report.reporter}`}
+                        >
+                          <td className="p-3 align-middle text-center border-r border-muted/20 last:border-r-0">
+                            <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ${badge.className}`}>
+                              {badge.icon}
+                              <span className="whitespace-nowrap">{badge.label}</span>
+                            </span>
+                          </td>
+
+                          <td className="p-3 align-middle text-base border-r border-muted/20 last:border-r-0">{report.reporter}</td>
+                          <td className="p-3 align-middle text-base border-r border-muted/20 last:border-r-0">{report.hub}</td>
+                          <td className="p-3 align-middle text-base border-r border-muted/20 last:border-r-0">{report.batch}</td>
+                          <td className="p-3 align-middle font-mono border-r border-muted/20 last:border-r-0">{report.lh_trip}</td>
+                          <td className="p-3 align-middle font-mono border-r border-muted/20 last:border-r-0">{report.plate}</td>
+                          <td className="p-3 align-middle border-r border-muted/20 last:border-r-0">{report.date}</td>
+                          <td className="p-3 align-middle border-r border-muted/20 last:border-r-0">{report.dataTeam || "-"}</td>
+                          <td className="p-3 align-middle">
+                            <Button size="sm" variant="ghost" aria-label={`Open details for ${report.id}`} onClick={() => openDetails(report)}>
+                              <MoreHorizontal />
+                            </Button>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
 
-                {/* Pagination controls */}
                 <div className="flex items-center justify-between mt-4">
                   <div className="text-sm text-muted-foreground">Showing {pageItems.length} of {filtered.length} entries</div>
                   <div className="flex items-center gap-2">
@@ -423,12 +765,11 @@ export function PrealertPage() {
           </CardContent>
         </Card>
 
-        {/* Batch modal */}
         {showBatchModal && selectedBatch && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
             <div className="w-full max-w-3xl bg-background rounded shadow p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold">{selectedBatch.hub} — {selectedBatch.batch}</h3>
+                <h3 className="text-xl font-semibold">{selectedBatch.hub} - {selectedBatch.batch}</h3>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" onClick={closeBatch}>Close</Button>
                 </div>
@@ -446,23 +787,23 @@ export function PrealertPage() {
                         <th className="p-2 text-left">LHTrip</th>
                         <th className="p-2 text-left">Plate</th>
                         <th className="p-2 text-left">Date</th>
-                        <th className="p-2 text-left">Data Team</th>
+                        <th className="p-2 text-left">Owner</th>
                         <th className="p-2 text-left">Status</th>
                         <th className="p-2 text-left">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {reports.filter(r => r.hub === selectedBatch.hub && r.batch === selectedBatch.batch).map(r => (
-                        <tr key={r.id} className="border-b hover:bg-muted/10">
-                          <td className="p-2">{r.reporter}</td>
-                          <td className="p-2">{r.hub}</td>
-                          <td className="p-2">{r.batch}</td>
-                          <td className="p-2">{r.lh_trip}</td>
-                          <td className="p-2">{r.plate}</td>
-                          <td className="p-2">{r.date}</td>
-                          <td className="p-2">{r.dataTeam}</td>
-                          <td className="p-2">{r.status}</td>
-                          <td className="p-2"><Button size="sm" variant="outline" onClick={() => openDetails(r)}>Details</Button></td>
+                      {reports.filter(report => report.hub === selectedBatch.hub && report.batch === selectedBatch.batch).map(report => (
+                        <tr key={report.id} className="border-b hover:bg-muted/10">
+                          <td className="p-2">{report.reporter}</td>
+                          <td className="p-2">{report.hub}</td>
+                          <td className="p-2">{report.batch}</td>
+                          <td className="p-2">{report.lh_trip}</td>
+                          <td className="p-2">{report.plate}</td>
+                          <td className="p-2">{report.date}</td>
+                          <td className="p-2">{report.dataTeam || "-"}</td>
+                          <td className="p-2">{report.status}</td>
+                          <td className="p-2"><Button size="sm" variant="outline" onClick={() => openDetails(report)}>Details</Button></td>
                         </tr>
                       ))}
                     </tbody>
@@ -473,14 +814,13 @@ export function PrealertPage() {
           </div>
         )}
 
-        {/* Detail modal */}
         {showDetailModal && detailReport && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
             <div className="w-full max-w-2xl bg-background rounded shadow p-6">
               <div className="flex items-start justify-between mb-4 gap-4">
                 <div>
                   <h3 className="text-2xl font-semibold">Report Details</h3>
-                  <div className="text-sm text-muted-foreground">ID: {detailReport.id} • {detailReport.date}</div>
+                  <div className="text-sm text-muted-foreground">ID: {detailReport.id} - {detailReport.date}</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" onClick={closeDetails}>Close</Button>
@@ -501,8 +841,8 @@ export function PrealertPage() {
                   <div className="font-medium">{detailReport.batch}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-muted-foreground">Data Team</div>
-                  <div className="font-medium">{detailReport.dataTeam}</div>
+                  <div className="text-sm text-muted-foreground">Owner</div>
+                  <div className="font-medium">{detailReport.dataTeam || "-"}</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">LH Trip</div>
@@ -512,16 +852,86 @@ export function PrealertPage() {
                   <div className="text-sm text-muted-foreground">Plate</div>
                   <div className="font-mono">{detailReport.plate}</div>
                 </div>
-                <div className="col-span-2">
+                <div>
+                  <div className="text-sm text-muted-foreground">Status</div>
+                  <div className="font-medium">{detailReport.status}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Acknowledged</div>
+                  <div className="font-medium">{detailReport.ackBy ? `${detailReport.ackBy} (${formatDateTime(detailReport.ackAt)})` : "-"}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Confirmed</div>
+                  <div className="font-medium">{detailReport.confirmedBy ? `${detailReport.confirmedBy} (${formatDateTime(detailReport.confirmedAt)})` : "-"}</div>
+                </div>
+                <div>
                   <div className="text-sm text-muted-foreground">Notes</div>
-                  <div className="font-medium">{detailReport.notes}</div>
+                  <div className="font-medium">{detailReport.notes || "-"}</div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 mt-6">
-                <Button variant="destructive" onClick={() => { setStatusForReport(detailReport.id, "Pending-Inaccurate"); closeDetails() }}>Mark Inaccurate</Button>
-                <Button onClick={() => { setStatusForReport(detailReport.id, "Done"); closeDetails() }}>Mark Complete</Button>
-              </div>
+              {detailReport.pendingEditReason && (
+                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  Pending Edit Reason: {detailReport.pendingEditReason}
+                </div>
+              )}
+
+              {detailReport.editHistory && detailReport.editHistory.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-sm text-muted-foreground mb-2">Edit History</div>
+                  <div className="space-y-2">
+                    {detailReport.editHistory.map((entry) => (
+                      <div key={entry.id} className="rounded border border-muted/30 p-3 text-sm">
+                        <div className="font-medium">{entry.editor} - {formatDateTime(entry.timestamp)}</div>
+                        <div className="text-muted-foreground">Reason: {entry.reason || "-"}</div>
+                        <div>Remarks: {entry.remarks}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {isDataTeamView && (
+                <div className="mt-6 space-y-4">
+                  {!detailReport.dataTeam && (
+                    <Button variant="outline" onClick={() => handleTakeOwnership(detailReport)}>Take Ownership</Button>
+                  )}
+
+                  {detailReport.status === "Pending" && (
+                    <Button onClick={() => handleAcknowledge(detailReport)}>Acknowledge</Button>
+                  )}
+
+                  {(detailReport.status === "Pending" || detailReport.status === "Acknowledged") && (
+                    <div className="space-y-2">
+                      <label className="text-sm text-muted-foreground">Pending Edit Reason</label>
+                      <textarea
+                        value={editReason}
+                        onChange={(event) => setEditReason(event.target.value)}
+                        className="w-full min-h-[90px] rounded border border-muted/30 p-2 text-sm"
+                        placeholder="Describe the discrepancy..."
+                      />
+                      <Button variant="destructive" onClick={() => handlePendingEdit(detailReport)}>Send Pending Edit</Button>
+                    </div>
+                  )}
+
+                  {detailReport.status === "Acknowledged" && (
+                    <Button onClick={() => handleConfirm(detailReport)}>Confirm and Download CSV</Button>
+                  )}
+                </div>
+              )}
+
+              {!isDataTeamView && detailReport.status === "Pending_Edit" && isReportForUser(detailReport) && (
+                <div className="mt-6 space-y-2">
+                  <label className="text-sm text-muted-foreground">Updated Remarks</label>
+                  <textarea
+                    value={editRemarks}
+                    onChange={(event) => setEditRemarks(event.target.value)}
+                    className="w-full min-h-[90px] rounded border border-muted/30 p-2 text-sm"
+                    placeholder="Update remarks and resubmit..."
+                  />
+                  <Button onClick={() => handleResubmit(detailReport)}>Resubmit Report</Button>
+                </div>
+              )}
             </div>
           </div>
         )}

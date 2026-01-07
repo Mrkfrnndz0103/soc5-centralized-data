@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import { 
   Plus, 
@@ -17,6 +18,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/use-toast"
 
 interface DispatchRow {
   id: string
@@ -38,6 +41,57 @@ interface DispatchRow {
   loadPercentage: number
 }
 
+type ReportStatus = "Pending" | "Acknowledged" | "Pending_Edit" | "Confirmed"
+
+type EditEntry = {
+  id: string
+  remarks: string
+  reason: string
+  editor: string
+  timestamp: string
+}
+
+type StoredReport = {
+  id: string
+  status: ReportStatus
+  reporter: string
+  hub: string
+  batch: string
+  lh_trip?: string
+  plate?: string
+  date: string
+  dataTeam?: string
+  dataTeamOpsId?: string
+  submittedBy?: string
+  submittedByOpsId?: string
+  notes?: string
+  createdAt: string
+  statusUpdatedAt: string
+  pendingEditReason?: string
+  editCount?: number
+  editHistory?: EditEntry[]
+}
+
+const STORAGE_KEY = "soc5_dispatch_reports"
+
+function loadStoredReports(): StoredReport[] {
+  if (typeof window === "undefined") return []
+  const raw = window.localStorage.getItem(STORAGE_KEY)
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed as StoredReport[]
+  } catch {
+    return []
+  }
+  return []
+}
+
+function saveStoredReports(reports: StoredReport[]) {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(reports))
+}
+
 const fleetSizes = ["4WH", "6W", "6WF", "10WH", "CV"]
 const mockClusterNames = ["MNL-001", "CBU-002", "CEB-003", "DVO-004", "ZAM-005"]
 const mockStations = ["Hub-A", "Hub-B", "Hub-C", "Hub-D"]
@@ -45,6 +99,9 @@ const mockRegions = ["NCR", "LUZON", "VISAYAS", "MINDANAO"]
 const mockProcessors = ["Juan Dela Cruz", "Maria Santos", "Jose Reyes", "Ana Garcia"]
 
 export function DispatchReportTable() {
+  const router = useRouter()
+  const { user } = useAuth()
+  const { toast } = useToast()
   const [rows, setRows] = useState<DispatchRow[]>([
     {
       id: "1",
@@ -239,6 +296,58 @@ export function DispatchReportTable() {
         return { shadowCx: 230, shadowRx: 120, containerWidth: 146, containerX: 122, containerY: 47, containerHeight: 41 }
     }
   }, [selectedFleetSize])
+
+  const handleSubmitReport = () => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Login required",
+        description: "Please log in before submitting a report.",
+      })
+      return
+    }
+
+    const timestamp = new Date().toISOString()
+    const date = timestamp.slice(0, 10)
+    const validRows = rows.filter((row) => row.clusterName || row.lHTripNumber || row.plateNumber)
+
+    if (validRows.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Empty report",
+        description: "Add at least one row before submitting.",
+      })
+      return
+    }
+
+    const newReports: StoredReport[] = validRows.map((row, index) => ({
+      id: `dispatch-${Date.now()}-${index}`,
+      status: "Pending",
+      reporter: user.name,
+      hub: row.station || "Unassigned Hub",
+      batch: `Batch ${row.batchNumber}`,
+      lh_trip: row.lHTripNumber,
+      plate: row.plateNumber,
+      date,
+      submittedBy: user.name,
+      submittedByOpsId: user.ops_id,
+      notes: "",
+      createdAt: timestamp,
+      statusUpdatedAt: timestamp,
+      editCount: 0,
+      editHistory: [],
+    }))
+
+    const existing = loadStoredReports()
+    saveStoredReports([...newReports, ...existing])
+
+    toast({
+      title: "Report submitted",
+      description: `Submitted ${newReports.length} dispatch rows.`,
+    })
+
+    router.push("/outbound/prealert")
+  }
 
   return (
     <div className="max-w-9xl mx-auto px-4 py-4 space-y-6">
@@ -1107,6 +1216,7 @@ export function DispatchReportTable() {
       <div className="flex justify-center mt-8">
         <Button
           className="bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 px-8 py-3 text-base font-semibold border-0"
+          onClick={handleSubmitReport}
         >
           <Save className="h-5 w-5 mr-2" />
           Submit Report

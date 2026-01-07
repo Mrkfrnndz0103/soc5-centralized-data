@@ -14,28 +14,42 @@ export function LoginModal() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [helpMessage, setHelpMessage] = useState("")
+  const [showModal, setShowModal] = useState(false)
+  const [sessionUnlocked, setSessionUnlocked] = useState(false)
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
 
-  const { login, isAuthenticated } = useAuth()
+  const { login } = useAuth()
   const { toast } = useToast()
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      const newSessionId = `seatalk-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
-      
-      createSession(newSessionId)
-      
-      setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`seatalk://auth/soc5-outbound?session=${newSessionId}`)}`)
-      startPolling(newSessionId)
+    const timer = setTimeout(() => setShowModal(true), 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!showModal || sessionUnlocked) {
+      return
     }
+
+    const newSessionId = `seatalk-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+
+    createSession(newSessionId)
+    setQrCode(`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`seatalk://auth/soc5-outbound?session=${newSessionId}`)}`)
+    startPolling(newSessionId)
+
     return () => {
       if (pollingRef.current) {
         clearInterval(pollingRef.current)
         pollingRef.current = null
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated])
+  }, [showModal, sessionUnlocked])
+
+  useEffect(() => {
+    if (!showSuccess) return
+    const timer = setTimeout(() => setSessionUnlocked(true), 1200)
+    return () => clearTimeout(timer)
+  }, [showSuccess])
 
   const createSession = async (sid: string) => {
     await authApi.createSeatalkSession(sid)
@@ -94,6 +108,10 @@ export function LoginModal() {
 
     if (response.data) {
       login(response.data.user, response.data.token)
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
+      }
       setShowSuccess(true)
     }
   }
@@ -114,7 +132,7 @@ export function LoginModal() {
     }
   }
 
-  if (isAuthenticated) return null
+  if (!showModal || sessionUnlocked) return null
 
   if (showSuccess) {
     return (

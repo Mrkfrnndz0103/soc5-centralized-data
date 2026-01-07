@@ -15,6 +15,7 @@ import { NotificationsPopup } from "@/components/notifications-popup"
 import { HelpPopup } from "@/components/help-popup"
 import { SettingsPopup } from "@/components/settings-popup"
 import { useAuth } from "@/contexts/auth-context"
+import { LoginModal } from "@/screens/login"
 
 const pageTitle: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -278,6 +279,8 @@ export function Layout({ children }: LayoutProps) {
         isMinimized={minimizedPopups.has("settings")}
         onToggleMinimize={() => toggleMinimize("settings")}
       />
+
+      <LoginModal />
     </div>
   )
 }

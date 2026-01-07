@@ -1,0 +1,35 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#f4f6f8"/>
+  <rect x="60" y="60" width="1080" height="580" rx="24" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="100" y="130" font-family="Arial, sans-serif" font-size="28" fill="#111827">SOC5 Outbound Internal Tool</text>
+  <text x="100" y="170" font-family="Arial, sans-serif" font-size="16" fill="#4b5563">Next.js full-stack operations platform</text>
+
+  <rect x="100" y="220" width="320" height="160" rx="16" fill="#e8f0fe" stroke="#c7d2fe"/>
+  <text x="120" y="260" font-family="Arial, sans-serif" font-size="16" fill="#1f2937">Outbound</text>
+  <text x="120" y="290" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Dispatch Report</text>
+  <text x="120" y="310" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Dispatch Monitoring</text>
+  <text x="120" y="330" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Prealert</text>
+
+  <rect x="440" y="220" width="320" height="160" rx="16" fill="#ecfdf3" stroke="#bbf7d0"/>
+  <text x="460" y="260" font-family="Arial, sans-serif" font-size="16" fill="#1f2937">Data Team</text>
+  <text x="460" y="290" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Validation</text>
+  <text x="460" y="310" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">File Upload</text>
+  <text x="460" y="330" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">SOCPacked Update</text>
+
+  <rect x="780" y="220" width="320" height="160" rx="16" fill="#fff7ed" stroke="#fed7aa"/>
+  <text x="800" y="260" font-family="Arial, sans-serif" font-size="16" fill="#1f2937">Admin</text>
+  <text x="800" y="290" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Attendance</text>
+  <text x="800" y="310" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Masterfile</text>
+  <text x="800" y="330" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Leave</text>
+
+  <rect x="100" y="420" width="480" height="160" rx="16" fill="#f5f3ff" stroke="#ddd6fe"/>
+  <text x="120" y="460" font-family="Arial, sans-serif" font-size="16" fill="#1f2937">KPI and Compliance</text>
+  <text x="120" y="490" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">MDT, Workstation, Productivity</text>
+  <text x="120" y="510" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Intraday Analytics</text>
+
+  <rect x="600" y="420" width="500" height="160" rx="16" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text x="620" y="460" font-family="Arial, sans-serif" font-size="16" fill="#1f2937">Platform</text>
+  <text x="620" y="490" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Next.js App Router</text>
+  <text x="620" y="510" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">PostgreSQL + pgAdmin4</text>
+  <text x="620" y="530" font-family="Arial, sans-serif" font-size="12" fill="#4b5563">Role-based access</text>
+</svg>

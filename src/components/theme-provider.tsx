@@ -32,9 +32,9 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "vite-ui-theme",
+  storageKey = "next-ui-theme",
   defaultThemePreset = "default",
-  themePresetKey = "vite-ui-theme-preset",
+  themePresetKey = "next-ui-theme-preset",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(defaultTheme)

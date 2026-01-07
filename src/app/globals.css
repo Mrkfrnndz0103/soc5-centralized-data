@@ -893,4 +893,17 @@
       rgba(99, 102, 241, 0.05) 50%, 
       rgba(139, 92, 246, 0.05) 100%);
   }
+
+  .blink-red {
+    animation: blinkRed 1s ease-in-out infinite;
+  }
+
+  @keyframes blinkRed {
+    0%, 100% {
+      background-color: rgba(239, 68, 68, 0.12);
+    }
+    50% {
+      background-color: rgba(239, 68, 68, 0.35);
+    }
+  }
 }

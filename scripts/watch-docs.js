@@ -11,7 +11,6 @@ const __dirname = path.dirname(__filename);
 const WATCH_PATHS = [
   path.join(__dirname, '../src'),
   path.join(__dirname, '../package.json'),
-  path.join(__dirname, '../supabase/migrations'),
 ];
 
 console.log('👀 Watching for file changes...\n');

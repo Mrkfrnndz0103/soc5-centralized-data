@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 
 import fs from 'fs';
 import path from 'path';
@@ -12,7 +12,7 @@ const hookContent = `#!/bin/sh
 
 echo "Updating documentation..."
 node scripts/update-docs.js
-git add docs/*.md README.md PROJECT_SUMMARY.md
+git add docs/*.md README.md
 echo "Documentation updated and staged"
 `;
 
@@ -23,7 +23,7 @@ try {
   }
   
   fs.writeFileSync(hookPath, hookContent, { mode: 0o755 });
-  console.log('✓ Git pre-commit hook installed');
+  console.log('Git pre-commit hook installed');
 } catch (error) {
   console.log('Note: Could not install Git hook (this is optional)');
 }

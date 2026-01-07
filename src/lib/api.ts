@@ -1,123 +1,107 @@
-// API Service Layer for Supabase integration
-import { supabase } from './supabase'
+type ApiResult<T> = { data?: T; error?: string }
+
+const jsonHeaders = { "Content-Type": "application/json" }
+
+async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
+  try {
+    const response = await fetch(path, {
+      ...init,
+      headers: {
+        ...jsonHeaders,
+        ...(init?.headers || {}),
+      },
+    })
+    const payload = await response.json().catch(() => null)
+    if (!response.ok) {
+      return { error: payload?.error || response.statusText }
+    }
+    return { data: payload }
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Request failed" }
+  }
+}
+
+function buildQuery(params: Record<string, string | number | boolean | undefined>) {
+  const search = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === "") return
+    search.append(key, String(value))
+  })
+  const query = search.toString()
+  return query ? `?${query}` : ""
+}
 
 // Authentication APIs
 export const authApi = {
   async login(ops_id: string, password: string) {
-    const { data, error } = await supabase.rpc('authenticate_user', {
-      p_ops_id: ops_id,
-      p_password: password
+    return request("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ ops_id, password }),
     })
-    if (error) return { error: error.message }
-    return { data }
   },
 
   async createSeatalkSession(session_id: string) {
-    const { error } = await supabase
-      .from('seatalk_sessions')
-      .insert({ session_id })
-    if (error) return { error: error.message }
-    return { data: { success: true } }
+    return request("/api/auth/seatalk/session", {
+      method: "POST",
+      body: JSON.stringify({ session_id }),
+    })
   },
 
   async checkSeatalkAuth(session_id: string) {
-    const { data, error } = await supabase
-      .from('seatalk_sessions')
-      .select('email, authenticated')
-      .eq('session_id', session_id)
-      .eq('authenticated', true)
-      .single()
-    if (error) return { data: null }
-    return { data }
+    return request(`/api/auth/seatalk/check${buildQuery({ session_id })}`, {
+      method: "GET",
+    })
   },
 
   async googleLogin(id_token: string) {
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: 'google',
-      token: id_token
+    return request("/api/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ id_token }),
     })
-    if (error) return { error: error.message }
-    return { data }
   },
 
   async changePassword(ops_id: string, old_password: string, new_password: string) {
-    const { data, error } = await supabase.rpc('change_user_password', {
-      p_ops_id: ops_id,
-      p_old_password: old_password,
-      p_new_password: new_password
+    return request("/api/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ ops_id, old_password, new_password }),
     })
-    if (error) return { error: error.message }
-    return { data }
   },
 
   async getUserById(userId: string) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/users/${encodeURIComponent(userId)}`, { method: "GET" })
   },
 
   async getUser(ops_id: string) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('ops_id', ops_id)
-      .single()
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/users/ops/${encodeURIComponent(ops_id)}`, { method: "GET" })
   },
 }
 
 // User lookup APIs
 export const lookupApi = {
   async getUser(ops_id: string) {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('ops_id', ops_id)
-      .single()
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/users/ops/${encodeURIComponent(ops_id)}`, { method: "GET" })
   },
 
   async getClusters(region?: string, query?: string) {
-    let queryBuilder = supabase.from('outbound_map').select('*')
-    if (region) queryBuilder = queryBuilder.eq('region', region)
-    if (query) queryBuilder = queryBuilder.ilike('cluster_name', `%${query}%`)
-    const { data, error } = await queryBuilder
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/lookup/clusters${buildQuery({ region, query })}`, { method: "GET" })
   },
 
   async getHubs(cluster?: string) {
-    let queryBuilder = supabase.from('outbound_map').select('hub_name, dock_number')
-    if (cluster) queryBuilder = queryBuilder.eq('cluster_name', cluster)
-    const { data, error } = await queryBuilder
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/lookup/hubs${buildQuery({ cluster })}`, { method: "GET" })
   },
 
   async getProcessors(query?: string) {
-    let queryBuilder = supabase.from('users').select('name, ops_id').eq('role', 'Processor')
-    if (query) queryBuilder = queryBuilder.ilike('name', `%${query}%`)
-    const { data, error } = await queryBuilder.limit(10)
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/lookup/processors${buildQuery({ query })}`, { method: "GET" })
   },
 }
 
 // Dispatch Report APIs
 export const dispatchApi = {
   async submitRows(rows: any[], submitted_by_ops_id: string) {
-    const { data, error } = await supabase
-      .from('dispatch_reports')
-      .insert(rows.map(row => ({ ...row, submitted_by_ops_id })))
-      .select()
-    if (error) return { error: error.message }
-    return { data: { created_count: data.length } }
+    return request("/api/dispatch/submit", {
+      method: "POST",
+      body: JSON.stringify({ rows, submitted_by_ops_id }),
+    })
   },
 
   async getDispatches(params: {
@@ -128,16 +112,9 @@ export const dispatchApi = {
     startDate?: string
     endDate?: string
   }) {
-    let queryBuilder = supabase.from('dispatch_reports').select('*', { count: 'exact' })
-    if (params.status) queryBuilder = queryBuilder.eq('status', params.status)
-    if (params.region) queryBuilder = queryBuilder.eq('region', params.region)
-    if (params.startDate) queryBuilder = queryBuilder.gte('created_at', params.startDate)
-    if (params.endDate) queryBuilder = queryBuilder.lte('created_at', params.endDate)
-    if (params.limit) queryBuilder = queryBuilder.limit(params.limit)
-    if (params.offset) queryBuilder = queryBuilder.range(params.offset, params.offset + (params.limit || 10) - 1)
-    const { data, error, count } = await queryBuilder.order('created_at', { ascending: false })
-    if (error) return { error: error.message }
-    return { data: { rows: data, total: count } }
+    return request(`/api/dispatch${buildQuery(params as Record<string, string | number | boolean | undefined>)}`, {
+      method: "GET",
+    })
   },
 
   async verifyRows(verifyData: {
@@ -146,77 +123,55 @@ export const dispatchApi = {
     send_csv?: boolean
     send_mode?: "per_batch" | "all"
   }) {
-    const { data, error } = await supabase.rpc('verify_dispatch_rows', verifyData)
-    if (error) return { error: error.message }
-    return { data }
+    return request("/api/dispatch/verify", {
+      method: "POST",
+      body: JSON.stringify(verifyData),
+    })
   },
 }
 
 // Hub Management APIs
 export const hubApi = {
   async getHubs(params?: { limit?: number; offset?: number; active?: boolean }) {
-    let queryBuilder = supabase.from('outbound_map').select('*', { count: 'exact' })
-    if (params?.active !== undefined) queryBuilder = queryBuilder.eq('active', params.active)
-    if (params?.limit) queryBuilder = queryBuilder.limit(params.limit)
-    if (params?.offset) queryBuilder = queryBuilder.range(params.offset, params.offset + (params.limit || 10) - 1)
-    const { data, error, count } = await queryBuilder
-    if (error) return { error: error.message }
-    return { data: { hubs: data, total: count } }
+    return request(`/api/hubs${buildQuery(params || {})}`, { method: "GET" })
   },
 
   async createHub(hubData: any) {
-    const { data, error } = await supabase.from('outbound_map').insert(hubData).select().single()
-    if (error) return { error: error.message }
-    return { data }
+    return request("/api/hubs", {
+      method: "POST",
+      body: JSON.stringify(hubData),
+    })
   },
 
   async updateHub(hub_id: string, hubData: any) {
-    const { data, error } = await supabase.from('outbound_map').update(hubData).eq('id', hub_id).select().single()
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/hubs/${encodeURIComponent(hub_id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(hubData),
+    })
   },
 
   async deleteHub(hub_id: string) {
-    const { data, error } = await supabase.from('outbound_map').update({ active: false }).eq('id', hub_id).select().single()
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/hubs/${encodeURIComponent(hub_id)}`, {
+      method: "DELETE",
+    })
   },
 }
 
-// KPI & Compliance APIs (Google Sheets data synced to Supabase)
+// KPI & Compliance APIs (Google Sheets data synced to PostgreSQL)
 export const kpiApi = {
   async getMDT(params?: { startDate?: string; endDate?: string }) {
-    let queryBuilder = supabase.from('kpi_mdt').select('*')
-    if (params?.startDate) queryBuilder = queryBuilder.gte('date', params.startDate)
-    if (params?.endDate) queryBuilder = queryBuilder.lte('date', params.endDate)
-    const { data, error } = await queryBuilder.order('date', { ascending: false })
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/kpi/mdt${buildQuery(params || {})}`, { method: "GET" })
   },
 
   async getWorkstation(params?: { startDate?: string; endDate?: string }) {
-    let queryBuilder = supabase.from('kpi_workstation').select('*')
-    if (params?.startDate) queryBuilder = queryBuilder.gte('date', params.startDate)
-    if (params?.endDate) queryBuilder = queryBuilder.lte('date', params.endDate)
-    const { data, error } = await queryBuilder.order('date', { ascending: false })
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/kpi/workstation${buildQuery(params || {})}`, { method: "GET" })
   },
 
   async getProductivity(params?: { startDate?: string; endDate?: string }) {
-    let queryBuilder = supabase.from('kpi_productivity').select('*')
-    if (params?.startDate) queryBuilder = queryBuilder.gte('date', params.startDate)
-    if (params?.endDate) queryBuilder = queryBuilder.lte('date', params.endDate)
-    const { data, error } = await queryBuilder.order('date', { ascending: false })
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/kpi/productivity${buildQuery(params || {})}`, { method: "GET" })
   },
 
   async getIntraday(date?: string) {
-    let queryBuilder = supabase.from('kpi_intraday').select('*')
-    if (date) queryBuilder = queryBuilder.eq('date', date)
-    const { data, error } = await queryBuilder.order('timestamp', { ascending: false })
-    if (error) return { error: error.message }
-    return { data }
+    return request(`/api/kpi/intraday${buildQuery({ date })}`, { method: "GET" })
   },
 }
