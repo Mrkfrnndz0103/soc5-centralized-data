@@ -26,7 +26,7 @@ The application uses Supabase (PostgreSQL) as the backend database with:
 
 ## Step 2: Get API Credentials
 
-1. Go to Project Settings → API
+1. Go to Project Settings â†’ API
 2. Copy the following:
    - **Project URL**: `https://xxxxx.supabase.co`
    - **anon/public key**: `eyJhbGc...`
@@ -34,9 +34,9 @@ The application uses Supabase (PostgreSQL) as the backend database with:
 
 3. Add to `.env`:
 ```env
-VITE_SUPABASE_URL=https://xxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key
-VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 ## Step 3: Run Database Migrations
@@ -405,8 +405,8 @@ Create a test file `test-connection.js`:
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL,
-  process.env.VITE_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
 async function testConnection() {
@@ -429,7 +429,7 @@ Run: `node test-connection.js`
 ## Troubleshooting
 
 ### Connection Refused
-- Check VITE_SUPABASE_URL is correct
+- Check NEXT_PUBLIC_SUPABASE_URL is correct
 - Verify project is active in Supabase dashboard
 - Check network/firewall settings
 
@@ -446,7 +446,7 @@ Run: `node test-connection.js`
 ## Backup and Recovery
 
 ### Manual Backup
-1. Go to Database → Backups in Supabase dashboard
+1. Go to Database â†’ Backups in Supabase dashboard
 2. Click "Create Backup"
 3. Download backup file
 
@@ -454,7 +454,7 @@ Run: `node test-connection.js`
 Supabase Pro plan includes automated daily backups.
 
 ### Restore from Backup
-1. Go to Database → Backups
+1. Go to Database â†’ Backups
 2. Select backup
 3. Click "Restore"
 

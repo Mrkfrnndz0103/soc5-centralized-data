@@ -516,14 +516,14 @@ describe('Dispatch Report Flow', () => {
 
 | Phase | Duration | Status |
 |-------|----------|--------|
-| Phase 1: Setup | Week 1 | ✅ Complete |
-| Phase 2: Infrastructure | Week 1-2 | ✅ Complete |
-| Phase 3: UI Foundation | Week 2-3 | ✅ Complete |
-| Phase 4: Features | Week 3-6 | 🟡 In Progress |
-| Phase 5: Integration | Week 7 | ✅ Complete |
-| Phase 6: Testing | Week 8 | 🟡 In Progress |
-| Phase 7: Documentation | Week 9 | 🟡 In Progress |
-| Phase 8: Deployment | Week 10 | ⏳ Pending |
+| Phase 1: Setup | Week 1 | âœ… Complete |
+| Phase 2: Infrastructure | Week 1-2 | âœ… Complete |
+| Phase 3: UI Foundation | Week 2-3 | âœ… Complete |
+| Phase 4: Features | Week 3-6 | ðŸŸ¡ In Progress |
+| Phase 5: Integration | Week 7 | âœ… Complete |
+| Phase 6: Testing | Week 8 | ðŸŸ¡ In Progress |
+| Phase 7: Documentation | Week 9 | ðŸŸ¡ In Progress |
+| Phase 8: Deployment | Week 10 | â³ Pending |
 
 **Total Duration**: 10 weeks
 **Current Status**: Week 7 (70% complete)

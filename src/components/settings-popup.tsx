@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from "react"
 import { 
   Settings, X, Minimize2, User, Bell, Moon, Sun, Globe, Lock,

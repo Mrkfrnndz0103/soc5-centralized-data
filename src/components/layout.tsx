@@ -1,8 +1,11 @@
+"use client"
+
 import type React from "react"
 import { useState, useEffect, useCallback, useMemo } from "react"
-import { Outlet, useLocation } from "react-router-dom"
+import { usePathname } from "next/navigation"
 import { Search, Mail, Bell, Calendar, Settings, User, Home, ChevronRight, LayoutDashboard, Eye, FileText, AlertCircle, Grid3x3, Briefcase, TrendingUp, Truck, Keyboard, Database } from "lucide-react"
 import { Sidebar, SidebarPopupType } from "@/components/sidebar"
+import { AnimatedPage } from "@/components/animated-page"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -37,13 +40,17 @@ const pageTitle: Record<string, string> = {
   "/midmile/truck-request": "Truck Request Management",
 }
 
-export function Layout() {
+interface LayoutProps {
+  children: React.ReactNode
+}
+
+export function Layout({ children }: LayoutProps) {
   const { user } = useAuth()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [activePopup, setActivePopup] = useState<SidebarPopupType>(null)
   const [minimizedPopups, setMinimizedPopups] = useState<Set<SidebarPopupType>>(new Set())
-  const location = useLocation()
-  const [lastPath, setLastPath] = useState(location.pathname)
+  const pathname = usePathname()
+  const [lastPath, setLastPath] = useState(pathname)
 
   const handlePopupChange = (popup: SidebarPopupType) => {
     if (activePopup === popup) {
@@ -87,11 +94,11 @@ export function Layout() {
   }
 
   useEffect(() => {
-    if (location.pathname !== lastPath) {
+    if (pathname && pathname !== lastPath) {
       setIsSidebarCollapsed(false)
-      setLastPath(location.pathname)
+      setLastPath(pathname)
     }
-  }, [location.pathname, lastPath])
+  }, [pathname, lastPath])
 
   // Memoized keyboard handler to prevent recreation
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
@@ -107,7 +114,7 @@ export function Layout() {
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [handleKeyPress])
 
-  const currentPageTitle = pageTitle[location.pathname] || "Outbound Tool"
+  const currentPageTitle = (pathname && pageTitle[pathname]) || "Outbound Tool"
 
   const handleSidebarClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement
@@ -119,7 +126,7 @@ export function Layout() {
 
   const getPageIcon = (size: "sm" | "lg" = "sm") => {
     const iconClassName = size === "lg" ? "h-5 w-5" : "h-4 w-4"
-    const path = location.pathname
+    const path = pathname || "/"
     if (path === "/dashboard") return <LayoutDashboard className={iconClassName} />
     if (path === "/outbound/dispatch-monitoring") return <Eye className={iconClassName} />
     if (path === "/outbound/dispatch-report") return <FileText className={iconClassName} />
@@ -235,7 +242,7 @@ export function Layout() {
                 <span className="text-foreground font-semibold">{currentPageTitle}</span>
               </div>
             </div>
-            <Outlet />
+            <AnimatedPage>{children}</AnimatedPage>
           </div>
         </div>
       </div>

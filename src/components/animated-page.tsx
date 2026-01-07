@@ -1,5 +1,7 @@
+"use client"
+
 import { motion } from "motion/react"
-import { useLocation } from "react-router-dom"
+import { usePathname } from "next/navigation"
 
 interface AnimatedPageProps {
   children: React.ReactNode
@@ -69,11 +71,11 @@ const fadeTransition = {
 }
 
 export function AnimatedPage({ children }: AnimatedPageProps) {
-  const location = useLocation()
+  const pathname = usePathname()
   
   // Different animations for different route categories
   const getAnimationConfig = () => {
-    const path = location.pathname
+    const path = pathname || "/"
     
     if (path.startsWith("/outbound/")) {
       return {
@@ -97,7 +99,7 @@ export function AnimatedPage({ children }: AnimatedPageProps) {
 
   return (
     <motion.div
-      key={location.pathname}
+      key={pathname ?? "page"}
       initial="initial"
       animate="in"
       exit="out"

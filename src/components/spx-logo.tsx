@@ -1,3 +1,5 @@
+"use client"
+
 export function SpxLogo({ className = "h-10 w-10" }: { className?: string }) {
   return (
     <svg

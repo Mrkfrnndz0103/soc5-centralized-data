@@ -2,7 +2,7 @@
 
 Enterprise-grade web application for managing outbound dispatch operations, KPI tracking, and team administration at SOC5.
 
-## 🚀 Quick Start
+## ≡ƒÜÇ Quick Start
 
 ```bash
 # Install dependencies
@@ -16,30 +16,30 @@ cp .env.example .env
 npm run dev
 
 # Open browser
-http://localhost:5173
+http://localhost:3000
 ```
 
-## 📋 Overview
+## ≡ƒôï Overview
 
 A modern React-based internal tool designed for SOC5 Outbound Operations team to streamline dispatch reporting, monitor KPIs, and manage team resources efficiently.
 
 ### Key Features
 
-- ✅ **Dual Authentication** - Backroom (Email) + FTE (SeaTalk QR)
-- ✅ **Dispatch Report** - Editable table with auto-complete, validation, and draft persistence
-- ✅ **Prealert Database** - Consolidated view with advanced filtering
-- ✅ **KPI Dashboard** - Real-time performance metrics from Google Sheets
-- ✅ **Admin Tools** - Attendance, masterfile, breaktime, leave management
-- ✅ **Theme System** - Dark/Light mode with 7 preset themes
-- ✅ **Responsive Design** - Mobile and desktop optimized
-- ✅ **Type-Safe** - Full TypeScript implementation
+- Γ£à **Dual Authentication** - Backroom (Email) + FTE (SeaTalk QR)
+- Γ£à **Dispatch Report** - Editable table with auto-complete, validation, and draft persistence
+- Γ£à **Prealert Database** - Consolidated view with advanced filtering
+- Γ£à **KPI Dashboard** - Real-time performance metrics from Google Sheets
+- Γ£à **Admin Tools** - Attendance, masterfile, breaktime, leave management
+- Γ£à **Theme System** - Dark/Light mode with 7 preset themes
+- Γ£à **Responsive Design** - Mobile and desktop optimized
+- Γ£à **Type-Safe** - Full TypeScript implementation
 
-## 🛠️ Tech Stack
+## ≡ƒ¢á∩╕Å Tech Stack
 
 ### Frontend
-- **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite 7
-- **Routing**: React Router v6
+- **Framework**: Next.js 14 + React 18 + TypeScript
+- **Build Tool**: Next.js (App Router)
+- **Routing**: Next.js App Router
 - **UI Components**: Radix UI Primitives
 - **Styling**: Tailwind CSS + CSS Variables
 - **Forms**: React Hook Form + Zod validation
@@ -59,44 +59,43 @@ A modern React-based internal tool designed for SOC5 Outbound Operations team to
 - **Testing Library**: React Testing Library
 - **Coverage**: Built-in Vitest coverage
 
-## 📁 Project Structure
+## ≡ƒôü Project Structure
 
 ```
 OutboudInternalTool/
-├── src/
-│   ├── components/
-│   │   ├── ui/              # Reusable UI components
-│   │   ├── layout.tsx       # Main layout wrapper
-│   │   ├── sidebar.tsx      # Navigation sidebar
-│   │   └── theme-*.tsx      # Theme components
-│   ├── contexts/
-│   │   └── auth-context.tsx # Authentication state
-│   ├── lib/
-│   │   ├── api.ts           # API service layer
-│   │   ├── supabase.ts      # Supabase client
-│   │   └── utils.ts         # Utility functions
-│   ├── pages/
-│   │   ├── login.tsx        # Login page
-│   │   ├── dashboard.tsx    # Main dashboard
-│   │   ├── dispatch-report.tsx
-│   │   ├── dispatch-monitoring.tsx
-│   │   └── prealert.tsx
-│   ├── theme/
-│   │   └── presets/         # Theme presets
-│   ├── test/                # Test files
-│   ├── App.tsx              # Root component
-│   └── main.tsx             # Entry point
-├── supabase/
-│   ├── migrations/          # Database migrations
-│   ├── functions/           # Edge functions
-│   ├── google-sheets-sync.gs
-│   └── webhook-receiver.gs
-├── docs/                    # Documentation
-├── .env.example             # Environment template
-└── package.json
+Γö£ΓöÇΓöÇ src/
+│   ├── app/                # Next.js App Router
+Γöé   Γö£ΓöÇΓöÇ components/
+Γöé   Γöé   Γö£ΓöÇΓöÇ ui/              # Reusable UI components
+Γöé   Γöé   Γö£ΓöÇΓöÇ layout.tsx       # Main layout wrapper
+Γöé   Γöé   Γö£ΓöÇΓöÇ sidebar.tsx      # Navigation sidebar
+Γöé   Γöé   ΓööΓöÇΓöÇ theme-*.tsx      # Theme components
+Γöé   Γö£ΓöÇΓöÇ contexts/
+Γöé   Γöé   ΓööΓöÇΓöÇ auth-context.tsx # Authentication state
+Γöé   Γö£ΓöÇΓöÇ lib/
+Γöé   Γöé   Γö£ΓöÇΓöÇ api.ts           # API service layer
+Γöé   Γöé   Γö£ΓöÇΓöÇ supabase.ts      # Supabase client
+Γöé   Γöé   ΓööΓöÇΓöÇ utils.ts         # Utility functions
+Γöé   Γö£ΓöÇΓöÇ screens/
+Γöé   Γöé   Γö£ΓöÇΓöÇ login.tsx        # Login page
+Γöé   Γöé   Γö£ΓöÇΓöÇ dashboard.tsx    # Main dashboard
+Γöé   Γöé   Γö£ΓöÇΓöÇ dispatch-report.tsx
+Γöé   Γöé   Γö£ΓöÇΓöÇ dispatch-monitoring.tsx
+Γöé   Γöé   ΓööΓöÇΓöÇ prealert.tsx
+Γöé   Γö£ΓöÇΓöÇ theme/
+Γöé   Γöé   ΓööΓöÇΓöÇ presets/         # Theme presets
+Γöé   Γö£ΓöÇΓöÇ test/                # Test files
+Γö£ΓöÇΓöÇ supabase/
+Γöé   Γö£ΓöÇΓöÇ migrations/          # Database migrations
+Γöé   Γö£ΓöÇΓöÇ functions/           # Edge functions
+Γöé   Γö£ΓöÇΓöÇ google-sheets-sync.gs
+Γöé   ΓööΓöÇΓöÇ webhook-receiver.gs
+Γö£ΓöÇΓöÇ docs/                    # Documentation
+Γö£ΓöÇΓöÇ .env.example             # Environment template
+ΓööΓöÇΓöÇ package.json
 ```
 
-## 🔧 Installation
+## ≡ƒöº Installation
 
 ### Prerequisites
 - Node.js 18+ and npm
@@ -116,9 +115,9 @@ cp .env.example .env
 
 Edit `.env`:
 ```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_oauth_client_id
 ```
 
 ### Step 3: Database Setup
@@ -129,7 +128,7 @@ See [docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md) for complete Supabase confi
 npm run dev
 ```
 
-## 🔐 Authentication
+## ≡ƒöÉ Authentication
 
 ### Backroom Users
 1. Select "Backroom" role
@@ -143,7 +142,7 @@ npm run dev
 
 See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for details.
 
-## 📊 Features
+## ≡ƒôè Features
 
 ### Dispatch Report
 - Max 10 rows per session
@@ -165,7 +164,7 @@ See [docs/AUTHENTICATION.md](docs/AUTHENTICATION.md) for details.
 - Productivity tracking
 - Intraday monitoring
 
-## 🧪 Testing
+## ≡ƒº¬ Testing
 
 ```bash
 # Run tests
@@ -178,17 +177,17 @@ npm run test:ui
 npm run test:run
 ```
 
-## 🏗️ Build
+## ≡ƒÅù∩╕Å Build
 
 ```bash
 # Production build
 npm run build
 
-# Preview production build
-npm run preview
+# Start production server
+npm run start
 ```
 
-## 📚 Documentation
+## ≡ƒôÜ Documentation
 
 - [Getting Started](docs/GETTING_STARTED.md)
 - [Database Setup](docs/DATABASE_SETUP.md)
@@ -198,7 +197,7 @@ npm run preview
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 - [Auto-Update System](docs/AUTO_UPDATE.md) - Documentation automation
 
-### 🤖 Auto-Documentation
+### ≡ƒñû Auto-Documentation
 
 Documentation automatically updates when code changes:
 ```bash
@@ -211,7 +210,7 @@ npm run docs:update
 # Auto-updates on git commit (via pre-commit hook)
 ```
 
-## 🎨 Theme System
+## ≡ƒÄ¿ Theme System
 
 7 built-in themes:
 - Default (Warm neutrals)
@@ -222,21 +221,21 @@ npm run docs:update
 - Rose (Pink/Red)
 - Cosmic (Deep space)
 
-## 🔄 Data Flow
+## ≡ƒöä Data Flow
 
 ```
 Google Sheets (Master Data)
-    ↓ Hourly Sync
+    Γåô Hourly Sync
 Supabase Database
-    ↓ Real-time
+    Γåô Real-time
 Web Application
-    ↓ On Submit
+    Γåô On Submit
 Supabase Database
-    ↓ Webhook
+    Γåô Webhook
 Google Sheets (Reports)
 ```
 
-## 🚀 Deployment
+## ≡ƒÜÇ Deployment
 
 ### Vercel (Recommended)
 ```bash
@@ -252,24 +251,25 @@ netlify deploy --prod
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed instructions.
 
-## 🤝 Contributing
+## ≡ƒñ¥ Contributing
 
 Internal project - contact development team for contribution guidelines.
 
-## 📝 License
+## ≡ƒô¥ License
 
 Proprietary - Internal use only
 
-## 🆘 Support
+## ≡ƒåÿ Support
 
 For issues or questions:
 - Check [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 - Contact: SOC5 Development Team
 
-## 📈 Version
+## ≡ƒôê Version
 
 Current Version: **1.0.0**
 
 ---
 
-Built with ❤️ by SOC5 Development Team
+Built with Γ¥ñ∩╕Å by SOC5 Development Team
+

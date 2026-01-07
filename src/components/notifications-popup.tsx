@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from "react"
 import { 
   Bell, X, Minimize2, Check, CheckCheck, Trash2, Settings,

@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useRef, useEffect, useCallback } from "react"
 import { MessageCircle, X, Send, Minimize2, Smile, Paperclip, Image, Mic, Check, CheckCheck, Reply, MoreVertical, Trash2, Copy, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"

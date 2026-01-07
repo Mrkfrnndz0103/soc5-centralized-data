@@ -24,59 +24,59 @@ The Outbound Internal Tool is an enterprise-grade web application designed for S
 ### Frontend Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│           React Application             │
-├─────────────────────────────────────────┤
-│  ┌──────────┐  ┌──────────┐  ┌────────┐│
-│  │  Pages   │  │Components│  │Contexts││
-│  └──────────┘  └──────────┘  └────────┘│
-│  ┌──────────┐  ┌──────────┐  ┌────────┐│
-│  │   API    │  │  Utils   │  │ Theme  ││
-│  └──────────┘  └──────────┘  └────────┘│
-└─────────────────────────────────────────┘
-           │
-           ▼
-┌─────────────────────────────────────────┐
-│         Supabase Backend                │
-├─────────────────────────────────────────┤
-│  • PostgreSQL Database                  │
-│  • Authentication                       │
-│  • Real-time Subscriptions              │
-│  • Storage                              │
-│  • Edge Functions                       │
-└─────────────────────────────────────────┘
-           │
-           ▼
-┌─────────────────────────────────────────┐
-│       Google Sheets Integration         │
-├─────────────────────────────────────────┤
-│  • Master Data Sync (Hourly)            │
-│  • Dispatch Reports Export              │
-│  • KPI Data Source                      │
-└─────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚           React Application             â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”â”‚
+â”‚  â”‚  Pages   â”‚  â”‚Componentsâ”‚  â”‚Contextsâ”‚â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚
+â”‚  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”â”‚
+â”‚  â”‚   API    â”‚  â”‚  Utils   â”‚  â”‚ Theme  â”‚â”‚
+â”‚  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜  â””â”€â”€â”€â”€â”€â”€â”€â”€â”˜â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+           â”‚
+           â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚         Supabase Backend                â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  â€¢ PostgreSQL Database                  â”‚
+â”‚  â€¢ Authentication                       â”‚
+â”‚  â€¢ Real-time Subscriptions              â”‚
+â”‚  â€¢ Storage                              â”‚
+â”‚  â€¢ Edge Functions                       â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+           â”‚
+           â–¼
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚       Google Sheets Integration         â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  â€¢ Master Data Sync (Hourly)            â”‚
+â”‚  â€¢ Dispatch Reports Export              â”‚
+â”‚  â€¢ KPI Data Source                      â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ### Component Hierarchy
 
 ```
 App
-├── AuthProvider
-│   └── ThemeProvider
-│       ├── Layout
-│       │   ├── Sidebar
-│       │   │   ├── Navigation Menu
-│       │   │   └── User Profile
-│       │   ├── Header
-│       │   │   ├── Theme Toggle
-│       │   │   └── Notifications
-│       │   └── Main Content
-│       │       ├── Dashboard
-│       │       ├── Dispatch Report
-│       │       ├── Dispatch Monitoring
-│       │       ├── Prealert Database
-│       │       └── Admin Pages
-│       └── Toaster
-└── Login Page
+â”œâ”€â”€ AuthProvider
+â”‚   â””â”€â”€ ThemeProvider
+â”‚       â”œâ”€â”€ Layout
+â”‚       â”‚   â”œâ”€â”€ Sidebar
+â”‚       â”‚   â”‚   â”œâ”€â”€ Navigation Menu
+â”‚       â”‚   â”‚   â””â”€â”€ User Profile
+â”‚       â”‚   â”œâ”€â”€ Header
+â”‚       â”‚   â”‚   â”œâ”€â”€ Theme Toggle
+â”‚       â”‚   â”‚   â””â”€â”€ Notifications
+â”‚       â”‚   â””â”€â”€ Main Content
+â”‚       â”‚       â”œâ”€â”€ Dashboard
+â”‚       â”‚       â”œâ”€â”€ Dispatch Report
+â”‚       â”‚       â”œâ”€â”€ Dispatch Monitoring
+â”‚       â”‚       â”œâ”€â”€ Prealert Database
+â”‚       â”‚       â””â”€â”€ Admin Pages
+â”‚       â””â”€â”€ Toaster
+â””â”€â”€ Login Page
 ```
 
 ## Database Schema
@@ -162,16 +162,16 @@ App
 **User Flow**:
 ```
 Login Page
-    ├── Backroom Login
-    │   ├── Enter Email
-    │   ├── Enter Password
-    │   ├── Validate Credentials
-    │   └── Redirect to Dashboard
-    └── FTE Login
-        ├── Display QR Code
-        ├── Scan with SeaTalk
-        ├── OAuth Callback
-        └── Redirect to Dashboard
+    â”œâ”€â”€ Backroom Login
+    â”‚   â”œâ”€â”€ Enter Email
+    â”‚   â”œâ”€â”€ Enter Password
+    â”‚   â”œâ”€â”€ Validate Credentials
+    â”‚   â””â”€â”€ Redirect to Dashboard
+    â””â”€â”€ FTE Login
+        â”œâ”€â”€ Display QR Code
+        â”œâ”€â”€ Scan with SeaTalk
+        â”œâ”€â”€ OAuth Callback
+        â””â”€â”€ Redirect to Dashboard
 ```
 
 ### 2. Dispatch Report Module
@@ -196,19 +196,19 @@ Login Page
 **Data Flow**:
 ```
 User Input
-    ↓
+    â†“
 Client-side Validation
-    ↓
+    â†“
 Draft Auto-save (localStorage)
-    ↓
+    â†“
 Submit Button
-    ↓
+    â†“
 Server-side Validation
-    ↓
+    â†“
 Insert to dispatch_reports
-    ↓
+    â†“
 Trigger Webhook
-    ↓
+    â†“
 Export to Google Sheets
 ```
 
@@ -526,11 +526,11 @@ Export to Google Sheets
 ## Recommendations
 
 ### Immediate Actions
-1. ✅ Complete documentation
-2. ✅ Increase test coverage
-3. ✅ Implement error monitoring (Sentry)
-4. ✅ Set up CI/CD pipeline
-5. ✅ Conduct security audit
+1. âœ… Complete documentation
+2. âœ… Increase test coverage
+3. âœ… Implement error monitoring (Sentry)
+4. âœ… Set up CI/CD pipeline
+5. âœ… Conduct security audit
 
 ### Best Practices
 1. Regular dependency updates

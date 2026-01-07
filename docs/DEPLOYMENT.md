@@ -60,16 +60,16 @@ Create `vercel.json`:
   "outputDirectory": "dist",
   "framework": "vite",
   "env": {
-    "VITE_SUPABASE_URL": "@supabase-url",
-    "VITE_SUPABASE_ANON_KEY": "@supabase-anon-key"
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase-url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key"
   }
 }
 ```
 
 4. **Add Environment Variables**
 ```bash
-vercel env add VITE_SUPABASE_URL production
-vercel env add VITE_SUPABASE_ANON_KEY production
+vercel env add NEXT_PUBLIC_SUPABASE_URL production
+vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
 ```
 
 5. **Deploy**
@@ -210,8 +210,8 @@ docker build -t outbound-tool:latest .
 4. **Run Container**
 ```bash
 docker run -d -p 80:80 \
-  -e VITE_SUPABASE_URL=your_url \
-  -e VITE_SUPABASE_ANON_KEY=your_key \
+  -e NEXT_PUBLIC_SUPABASE_URL=your_url \
+  -e NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key \
   outbound-tool:latest
 ```
 
@@ -221,24 +221,24 @@ docker run -d -p 80:80 \
 
 ```env
 # Supabase
-VITE_SUPABASE_URL=https://your-prod-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_production_anon_key
+NEXT_PUBLIC_SUPABASE_URL=https://your-prod-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
 
 # Application
-VITE_APP_NAME=SOC5 Ops Internal Tool
-VITE_APP_VERSION=1.0.0
-VITE_ENVIRONMENT=production
+NEXT_PUBLIC_APP_NAME=SOC5 Ops Internal Tool
+NEXT_PUBLIC_APP_VERSION=1.0.0
+NEXT_PUBLIC_ENVIRONMENT=production
 
 # Features
-VITE_ENABLE_DRAFT_AUTOSAVE=true
-VITE_DRAFT_AUTOSAVE_INTERVAL=10000
-VITE_MAX_DISPATCH_ROWS=10
+NEXT_PUBLIC_ENABLE_DRAFT_AUTOSAVE=true
+NEXT_PUBLIC_DRAFT_AUTOSAVE_INTERVAL=10000
+NEXT_PUBLIC_MAX_DISPATCH_ROWS=10
 
 # Google OAuth
-VITE_GOOGLE_CLIENT_ID=your_production_client_id
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_production_client_id
 
 # Monitoring
-VITE_SENTRY_DSN=your_sentry_dsn
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 ```
 
 ## Database Migration
@@ -288,7 +288,7 @@ import * as Sentry from "@sentry/react"
 
 if (import.meta.env.PROD) {
   Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
     environment: "production",
     tracesSampleRate: 0.1,
   })
@@ -405,8 +405,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v20
@@ -488,7 +488,7 @@ npm run build
 
 ### Environment Variable Issues
 - Verify all required variables are set
-- Check variable names (must start with VITE_)
+- Check variable names (must start with NEXT_PUBLIC_)
 - Restart build after changes
 
 ### Database Connection Issues

@@ -1,3 +1,5 @@
+"use client"
+
 import { DispatchReportTable } from "@/components/dispatch-report-table"
 
 export function DispatchReportPage() {

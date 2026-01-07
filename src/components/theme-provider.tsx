@@ -1,3 +1,5 @@
+"use client"
+
 import { createContext, useContext, useEffect, useState } from "react"
 import { themePresets, ThemePreset } from "@/theme/presets"
 
@@ -35,13 +37,19 @@ export function ThemeProvider({
   themePresetKey = "vite-ui-theme-preset",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  )
+  const [theme, setTheme] = useState<Theme>(defaultTheme)
+  const [themePreset, setThemePreset] = useState<ThemePreset>(defaultThemePreset)
 
-  const [themePreset, setThemePreset] = useState<ThemePreset>(
-    () => (localStorage.getItem(themePresetKey) as ThemePreset) || defaultThemePreset
-  )
+  useEffect(() => {
+    const storedTheme = localStorage.getItem(storageKey) as Theme | null
+    const storedPreset = localStorage.getItem(themePresetKey) as ThemePreset | null
+    if (storedTheme) {
+      setTheme(storedTheme)
+    }
+    if (storedPreset) {
+      setThemePreset(storedPreset)
+    }
+  }, [storageKey, themePresetKey])
 
   useEffect(() => {
     const root = window.document.documentElement

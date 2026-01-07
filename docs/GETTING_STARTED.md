@@ -1,4 +1,4 @@
-# Getting Started
+﻿# Getting Started
 
 Quick guide to get the Outbound Internal Tool running on your local machine.
 
@@ -37,17 +37,17 @@ Edit `.env` with your credentials:
 
 ```env
 # Supabase Configuration
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your_anon_key_here
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 
 # Google OAuth (Optional for FTE login)
-VITE_GOOGLE_CLIENT_ID=your_google_client_id
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
 
 # Application Settings
-VITE_APP_NAME=SOC5 Ops Internal Tool
-VITE_ENABLE_DRAFT_AUTOSAVE=true
-VITE_DRAFT_AUTOSAVE_INTERVAL=10000
-VITE_MAX_DISPATCH_ROWS=10
+NEXT_PUBLIC_APP_NAME=SOC5 Ops Internal Tool
+NEXT_PUBLIC_ENABLE_DRAFT_AUTOSAVE=true
+NEXT_PUBLIC_DRAFT_AUTOSAVE_INTERVAL=10000
+NEXT_PUBLIC_MAX_DISPATCH_ROWS=10
 ```
 
 ### 4. Database Setup
@@ -65,7 +65,7 @@ Quick setup:
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
+The application will be available at `http://localhost:3000`
 
 ## First Login
 
@@ -80,12 +80,12 @@ You'll be prompted to change the password on first login.
 
 ```
 src/
-├── components/     # Reusable UI components
-├── contexts/       # React contexts (auth, theme)
-├── lib/           # Utilities and API services
-├── pages/         # Page components
-├── theme/         # Theme presets
-└── test/          # Test files
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ components/     # Reusable UI components
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ contexts/       # React contexts (auth, theme)
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ lib/           # Utilities and API services
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ pages/         # Page components
+Ã¢â€Å“Ã¢â€â‚¬Ã¢â€â‚¬ theme/         # Theme presets
+Ã¢â€â€Ã¢â€â‚¬Ã¢â€â‚¬ test/          # Test files
 ```
 
 ## Available Scripts
@@ -94,7 +94,7 @@ src/
 # Development
 npm run dev          # Start dev server
 npm run build        # Build for production
-npm run preview      # Preview production build
+npm run start      # Start production server
 
 # Testing
 npm test            # Run tests in watch mode
@@ -154,8 +154,8 @@ const { data, error } = await dispatchApi.getDispatches({
 
 ### Port Already in Use
 ```bash
-# Kill process on port 5173
-npx kill-port 5173
+# Kill process on port 3000
+npx kill-port 3000
 ```
 
 ### Module Not Found
@@ -166,7 +166,7 @@ npm install
 ```
 
 ### Supabase Connection Error
-- Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+- Verify NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
 - Check Supabase project is active
 - Verify network connection
 

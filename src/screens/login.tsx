@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { authApi } from "@/lib/api"

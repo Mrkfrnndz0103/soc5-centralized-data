@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from "react"
 import { 
   HelpCircle, X, Minimize2, Search, Book, FileText, Video,

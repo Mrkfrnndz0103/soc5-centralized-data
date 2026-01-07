@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from "react"
 import { MessageSquare, Bell, HelpCircle, Settings, MessageCircle } from "lucide-react"
 import { cn } from "@/lib/utils"

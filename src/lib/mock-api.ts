@@ -1,6 +1,6 @@
 // Mock API Service for Development
 // Use this when backend is not available
-// Set VITE_USE_MOCK_API=true in .env to enable
+// Set NEXT_PUBLIC_USE_MOCK_API=true in .env to enable
 
 import mockData from "./mockup-data"
 
@@ -282,7 +282,7 @@ export const mockKpiApi = {
 
 // Check if mock API should be used
 export function useMockApi(): boolean {
-  return import.meta.env.VITE_USE_MOCK_API === "true"
+  return process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
 }
 
 export default {

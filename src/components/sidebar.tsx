@@ -1,6 +1,9 @@
+"use client"
+
 import type React from "react"
 import { useState, useCallback, memo } from "react"
-import { Link, useLocation } from "react-router-dom"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { ChevronRight, LayoutDashboard, Package, TrendingUp, Truck, Bell, HelpCircle, Settings, Eye, FileText, AlertCircle, Grid3x3, Users, Calendar, Clock, Briefcase, BarChart3, Zap, MapPin, Database, Upload, CheckCircle, AlertTriangle, Anchor, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -101,10 +104,10 @@ interface NavItemProps {
 const NavItem = memo(function NavItem({ item, isCollapsed, level = 0 }: NavItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
-  const location = useLocation()
+  const pathname = usePathname()
   const hasSubItems = item.subItems && item.subItems.length > 0
-  const isActive = location.pathname === item.path
-  const isParentActive = location.pathname.startsWith(item.path + "/")
+  const isActive = pathname === item.path
+  const isParentActive = pathname ? pathname.startsWith(item.path + "/") : false
 
   const isTopLevelHighlighted = level === 0 && (isActive || isParentActive)
   const isSubItemActive = level > 0 && isActive
@@ -133,7 +136,7 @@ const NavItem = memo(function NavItem({ item, isCollapsed, level = 0 }: NavItemP
       onMouseLeave={handleMouseLeave}
     >
       <Link
-        to={!hasSubItems ? item.path : "#"}
+        href={item.path}
         onClick={(e) => hasSubItems && e.preventDefault()}
         className={cn(
           "relative flex h-9 items-center gap-2.5 overflow-hidden rounded-lg py-2 pr-3 text-sm transition-all duration-200 group",

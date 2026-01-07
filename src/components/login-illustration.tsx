@@ -1,3 +1,5 @@
+"use client"
+
 export function LoginIllustration({ className = "" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">

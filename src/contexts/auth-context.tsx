@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, ReactNode } from "react"
+"use client"
+
+import { createContext, useContext, useEffect, useState, ReactNode } from "react"
 
 export interface User {
   ops_id?: string
@@ -21,11 +23,19 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem("user")
-    return stored ? JSON.parse(stored) : null
-  })
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"))
+  const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user")
+    const storedToken = localStorage.getItem("token")
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
+    if (storedToken) {
+      setToken(storedToken)
+    }
+  }, [])
 
   const login = (userData: User, authToken: string) => {
     setUser(userData)

@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase'
 ```
 
 All API calls use the Supabase client configured with:
-- **Base URL**: `VITE_SUPABASE_URL`
+- **Base URL**: `NEXT_PUBLIC_SUPABASE_URL`
 - **Auth**: Anon key for public operations, JWT for authenticated
 
 ## Dispatch Report API
