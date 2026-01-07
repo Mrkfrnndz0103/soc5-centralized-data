@@ -32,3 +32,5 @@ The SOC5 Outbound Internal Tool is a Next.js full-stack application designed to 
 - Which KPIs must be real-time vs. batch-updated?
 - What is the preferred audit logging strategy?
 - Which roles require read-only access to admin tools?
+
+Last Updated: 2026-01-07

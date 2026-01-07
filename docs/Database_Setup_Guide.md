@@ -69,10 +69,12 @@ Create `.env` and set:
 
 ```
 DATABASE_URL=postgres://soc5_app:YOUR_PASSWORD@localhost:5432/soc5_outbound
+DATABASE_SSL=false
 ```
 
 Notes:
 - `DATABASE_URL` is **server-only**. Do not use `NEXT_PUBLIC_` for it.
+- Set `DATABASE_SSL=true` only if your provider requires SSL.
 - If using a hosted database, replace `localhost` with your provider host.
 
 ## Schema Plan (Detailed)
