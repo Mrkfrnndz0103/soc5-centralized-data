@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
+import { withRequestLogging } from "@/lib/request-context"
 
-export async function GET(request: Request) {
+export const GET = withRequestLogging("/api/auth/seatalk/check", async (request: Request) => {
   const { searchParams } = new URL(request.url)
   const sessionId = searchParams.get("session_id")
 
@@ -25,4 +26,4 @@ export async function GET(request: Request) {
     email: result.rows[0].email,
     authenticated: result.rows[0].authenticated,
   })
-}
+})

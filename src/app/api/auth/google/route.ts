@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { OAuth2Client } from "google-auth-library"
 import { query } from "@/lib/db"
 import { createSession, setSessionCookie } from "@/lib/auth"
+import { withRequestLogging } from "@/lib/request-context"
 
 const allowedDomains = (process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS || "shopeemobile-external.com,spxexpress.com")
   .split(",")
@@ -13,7 +14,7 @@ function isAllowedDomain(email: string) {
   return domain && allowedDomains.includes(domain)
 }
 
-export async function POST(request: Request) {
+export const POST = withRequestLogging("/api/auth/google", async (request: Request) => {
   const body = await request.json().catch(() => ({}))
   const idToken = body?.id_token
 
@@ -77,4 +78,4 @@ export async function POST(request: Request) {
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Google login failed" }, { status: 401 })
   }
-}
+})

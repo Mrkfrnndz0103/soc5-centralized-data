@@ -31,3 +31,6 @@ dist-ssr
 
 # Build outputs
 build
+
+# Local Netlify folder
+.netlify

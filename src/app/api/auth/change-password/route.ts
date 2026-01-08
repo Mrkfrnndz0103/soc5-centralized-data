@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
-export async function POST(request: Request) {
+import { withRequestLogging } from "@/lib/request-context"
+
+export const POST = withRequestLogging("/api/auth/change-password", async (request: Request) => {
   const body = await request.json().catch(() => ({}))
   const opsId = body?.ops_id
 
@@ -11,4 +13,4 @@ export async function POST(request: Request) {
     { error: "Password login is disabled. Use Google Sign-In or Seatalk." },
     { status: 410 }
   )
-}
+})

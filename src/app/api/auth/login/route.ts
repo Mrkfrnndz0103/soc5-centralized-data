@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
 import { createSession, setSessionCookie } from "@/lib/auth"
+import { withRequestLogging } from "@/lib/request-context"
 
 const allowedDomains = (process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS || "shopeemobile-external.com,spxexpress.com")
   .split(",")
@@ -12,7 +13,7 @@ function isAllowedDomain(value: string) {
   return domain && allowedDomains.includes(domain)
 }
 
-export async function POST(request: Request) {
+export const POST = withRequestLogging("/api/auth/login", async (request: Request) => {
   const body = await request.json().catch(() => ({}))
   const opsId = body?.ops_id
 
@@ -54,4 +55,4 @@ export async function POST(request: Request) {
   })
   setSessionCookie(response, sessionId)
   return response
-}
+})

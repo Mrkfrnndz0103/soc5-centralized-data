@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
 import { getSession } from "@/lib/auth"
+import { withRequestLogging } from "@/lib/request-context"
 
-export async function POST(request: Request) {
+export const POST = withRequestLogging("/api/dispatch/verify", async (request: Request) => {
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -37,4 +38,4 @@ export async function POST(request: Request) {
   }))
 
   return NextResponse.json({ results })
-}
+})

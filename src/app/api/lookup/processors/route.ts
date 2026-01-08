@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
 import { getSession } from "@/lib/auth"
+import { withRequestLogging } from "@/lib/request-context"
 
-export async function GET(request: Request) {
+export const GET = withRequestLogging("/api/lookup/processors", async (request: Request) => {
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -31,4 +32,4 @@ export async function GET(request: Request) {
   )
 
   return NextResponse.json(result.rows)
-}
+})

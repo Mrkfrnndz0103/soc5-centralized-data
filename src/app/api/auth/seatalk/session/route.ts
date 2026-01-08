@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
+import { withRequestLogging } from "@/lib/request-context"
 
-export async function POST(request: Request) {
+export const POST = withRequestLogging("/api/auth/seatalk/session", async (request: Request) => {
   const body = await request.json().catch(() => ({}))
   const sessionId = body?.session_id
 
@@ -18,4 +19,4 @@ export async function POST(request: Request) {
   )
 
   return NextResponse.json({ success: true })
-}
+})

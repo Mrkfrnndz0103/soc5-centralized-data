@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
 import { getSession } from "@/lib/auth"
+import { withRequestLogging } from "@/lib/request-context"
 
 function pickValue(row: any, keys: string[]) {
   for (const key of keys) {
@@ -11,7 +12,7 @@ function pickValue(row: any, keys: string[]) {
   return null
 }
 
-export async function POST(request: Request) {
+export const POST = withRequestLogging("/api/dispatch/submit", async (request: Request) => {
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -60,4 +61,4 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ created_count: rows.length })
-}
+})

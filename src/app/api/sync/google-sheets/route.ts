@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createHash } from "crypto"
 import { query } from "@/lib/db"
+import { withRequestLogging } from "@/lib/request-context"
 
 type RawRow = Record<string, unknown>
 
@@ -261,7 +262,7 @@ async function upsertSheetRows(rows: SheetRow[]) {
   }
 }
 
-export async function POST(request: Request) {
+export const POST = withRequestLogging("/api/sync/google-sheets", async (request: Request) => {
   if (process.env.FEATURE_GOOGLE_SHEETS_SYNC === "false") {
     return NextResponse.json({ error: "Google Sheets sync is disabled" }, { status: 403 })
   }
@@ -299,4 +300,4 @@ export async function POST(request: Request) {
     synced: sheetRows.length,
     ignored: rawRows.length - sheetRows.length,
   })
-}
+})

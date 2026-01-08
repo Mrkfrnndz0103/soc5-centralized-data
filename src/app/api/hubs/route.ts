@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
 import { getSession } from "@/lib/auth"
+import { withRequestLogging } from "@/lib/request-context"
 
-export async function GET(request: Request) {
+export const GET = withRequestLogging("/api/hubs", async (request: Request) => {
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -42,9 +43,9 @@ export async function GET(request: Request) {
   )
 
   return NextResponse.json({ hubs: rowsResult.rows, total: countResult.rows[0]?.total || 0 })
-}
+})
 
-export async function POST(request: Request) {
+export const POST = withRequestLogging("/api/hubs", async (request: Request) => {
   const session = await getSession()
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -69,4 +70,4 @@ export async function POST(request: Request) {
   )
 
   return NextResponse.json(result.rows[0])
-}
+})
