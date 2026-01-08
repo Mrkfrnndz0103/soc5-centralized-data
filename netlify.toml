@@ -7,4 +7,4 @@ package = "netlify-plugin-ghost-markdown"
   [plugins.inputs]
 
   ghostURL = "https://outbound-project.ghost.io"
-  ghostKey = "${CONTENT_API_KEY}"
+  ghostKey = "bbb89f89aa9b0581b4e30bd68f"
