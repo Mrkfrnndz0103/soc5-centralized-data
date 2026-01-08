@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       events.forEach((event) => window.removeEventListener(event, updateActivity))
       window.clearInterval(intervalId)
     }
-  }, [authState.user, authState.token, logout])
+  }, [authState.user, logout])
 
   return (
     <AuthContext.Provider
