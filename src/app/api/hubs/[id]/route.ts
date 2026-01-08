@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
+import { getSession } from "@/lib/auth"
 
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  const session = await getSession()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const body = await request.json().catch(() => ({}))
   const fields = Object.keys(body || {})
 
@@ -35,6 +41,11 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
+  const session = await getSession()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const result = await query(
     `UPDATE outbound_map
      SET active = false

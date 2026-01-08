@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { randomUUID } from "crypto"
 import { query } from "@/lib/db"
+import { createSession, setSessionCookie } from "@/lib/auth"
 
 const allowedDomains = (process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS || "shopeemobile-external.com,spxexpress.com")
   .split(",")
@@ -42,15 +42,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Email domain is not allowed" }, { status: 403 })
   }
 
-  const token = randomUUID()
+  const { sessionId } = await createSession(user.ops_id)
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     user: {
       ops_id: user.ops_id,
       name: user.name,
       role: user.role,
       email: user.email,
     },
-    token,
   })
+  setSessionCookie(response, sessionId)
+  return response
 }

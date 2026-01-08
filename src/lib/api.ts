@@ -6,9 +6,8 @@ export type AuthUser = {
   department?: string
 }
 
-export type LoginResponse = {
+export type AuthSessionResponse = {
   user: AuthUser
-  token: string
 }
 
 type ApiResult<T> = { data?: T; error?: string }
@@ -43,6 +42,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T
   try {
     const response = await fetch(path, {
       ...init,
+      credentials: "include",
       headers: {
         ...jsonHeaders,
         ...(init?.headers || {}),
@@ -71,7 +71,7 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
 // Authentication APIs
 export const authApi = {
   async login(ops_id: string, password: string) {
-    return request<LoginResponse>("/api/auth/login", {
+    return request<AuthSessionResponse>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ ops_id, password }),
     })
@@ -91,9 +91,21 @@ export const authApi = {
   },
 
   async googleLogin(id_token: string) {
-    return request<LoginResponse>("/api/auth/google", {
+    return request<AuthSessionResponse>("/api/auth/google", {
       method: "POST",
       body: JSON.stringify({ id_token }),
+    })
+  },
+
+  async getSession() {
+    return request<AuthSessionResponse>("/api/auth/me", {
+      method: "GET",
+    })
+  },
+
+  async logout() {
+    return request<{ success: boolean }>("/api/auth/logout", {
+      method: "POST",
     })
   },
 

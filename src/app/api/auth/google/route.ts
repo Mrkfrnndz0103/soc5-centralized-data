@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { OAuth2Client } from "google-auth-library"
 import { query } from "@/lib/db"
+import { createSession, setSessionCookie } from "@/lib/auth"
 
 const allowedDomains = (process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS || "shopeemobile-external.com,spxexpress.com")
   .split(",")
@@ -49,10 +50,12 @@ export async function POST(request: Request) {
     )
 
     if (existing.rows.length > 0) {
-      return NextResponse.json({
+      const { sessionId } = await createSession(existing.rows[0].ops_id)
+      const response = NextResponse.json({
         user: existing.rows[0],
-        token: payload.sub,
       })
+      setSessionCookie(response, sessionId)
+      return response
     }
 
     const name = payload?.name || email.split("@")[0]
@@ -65,10 +68,12 @@ export async function POST(request: Request) {
       [opsId, name, email]
     )
 
-    return NextResponse.json({
+    const { sessionId } = await createSession(created.rows[0].ops_id)
+    const response = NextResponse.json({
       user: created.rows[0],
-      token: payload.sub,
     })
+    setSessionCookie(response, sessionId)
+    return response
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Google login failed" }, { status: 401 })
   }

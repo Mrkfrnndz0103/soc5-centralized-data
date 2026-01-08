@@ -132,6 +132,13 @@ Note: headers for CSV import should be `ops_id,name,role,department,is_fte,email
 - email (text)
 - authenticated (boolean)
 
+### auth_sessions
+- session_id (uuid, primary key)
+- ops_id (text, foreign key to users.ops_id)
+- created_at (timestamp)
+- expires_at (timestamp)
+- last_seen_at (timestamp)
+
 ### kpi_mdt, kpi_workstation, kpi_productivity, kpi_intraday
 - use consistent date fields for filtering
 - use numeric columns for metrics

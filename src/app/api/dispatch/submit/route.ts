@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { query } from "@/lib/db"
+import { getSession } from "@/lib/auth"
 
 function pickValue(row: any, keys: string[]) {
   for (const key of keys) {
@@ -11,6 +12,11 @@ function pickValue(row: any, keys: string[]) {
 }
 
 export async function POST(request: Request) {
+  const session = await getSession()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const body = await request.json().catch(() => ({}))
   const rows = Array.isArray(body?.rows) ? body.rows : []
   const submittedBy = body?.submitted_by_ops_id

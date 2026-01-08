@@ -49,7 +49,7 @@ export function LoginModal() {
     }
 
     if (response.data) {
-      login(response.data.user, response.data.token)
+      login(response.data.user)
     }
   }
 

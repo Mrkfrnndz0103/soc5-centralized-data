@@ -58,7 +58,7 @@ export function LoginModal() {
       return
     }
     if (response.data) {
-      login(response.data.user, response.data.token)
+      login(response.data.user)
       setShowSuccess(true)
     }
   }, [login, toast])
@@ -152,7 +152,7 @@ export function LoginModal() {
               return
             }
             if (result.data) {
-              login(result.data.user, result.data.token)
+              login(result.data.user)
               setShowSuccess(true)
             }
           },
@@ -212,7 +212,7 @@ export function LoginModal() {
     }
 
     if (response.data) {
-      login(response.data.user, response.data.token)
+      login(response.data.user)
       if (pollingRef.current) {
         clearInterval(pollingRef.current)
         pollingRef.current = null
